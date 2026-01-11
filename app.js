@@ -471,19 +471,23 @@ async function addMultipleItems() {
     // Add all selected exercises with incrementing combo_order
     for (let i = 0; i < SELECTED_EXERCISES.length; i++) {
       const ex = SELECTED_EXERCISES[i];
+      
+      const targetSets = parseInt($("tmplTargetSets").value) || 3;
+      const targetReps = $("tmplTargetReps").value.trim() || "8-12";
+      const restSeconds = parseInt($("tmplRestSec").value) || 90;
+      
       const newItem = {
         template_id: ACTIVE_TEMPLATE_ID,
         template_day_id: CURRENT_DAY_ID,
         exercise_id: ex.id,
         order: ++maxOrder,
-        sets: parseInt($("tmplSets").value) || 3,
-        reps_min: parseInt($("tmplRepsMin").value) || 8,
-        reps_max: parseInt($("tmplRepsMax").value) || 12,
-        rest_seconds: parseInt($("tmplRest").value) || 60,
+        target_sets: targetSets,
+        target_reps: targetReps,
+        custom_reps: customReps || null,
+        rest_seconds: restSeconds,
         combo_type: comboType,
         combo_group: comboGroup,
-        combo_order: i + 1,
-        custom_reps: customReps || null
+        combo_order: i + 1
       };
       
       await DB.put("template_items", newItem);
