@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Treino PWA (Teste 1)</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#111827" />
+
+  <style>
+    :root{
+      --bg:#0b1020; --card:#111827; --muted:#9ca3af; --line:#374151;
+      --pri:#2563eb; --sec:#374151; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#e5e7eb}
+    header{position:sticky;top:0;background:var(--card);padding:14px 16px;border-bottom:1px solid var(--line);z-index:5}
+    header .top{display:flex;gap:10px;align-items:center;justify-content:space-between}
+    header .sub{color:var(--muted);font-size:12px;margin-top:4px}
+
+    main{max-width:980px;margin:0 auto;padding:16px}
+    .grid{display:grid;grid-template-columns: 1fr;gap:12px}
+    @media(min-width:900px){ .grid{grid-template-columns: 330px 1fr} }
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+    h2,h3{margin:0 0 10px 0}
+    h2{font-size:16px}
+    h3{font-size:14px;color:#d1d5db}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .col{display:flex;flex-direction:column;gap:10px}
+
+    input, select, textarea{
+      width:100%; padding:12px; border-radius:12px; border:1px solid var(--line);
+      background:#0b1020; color:#e5e7eb; outline:none;
+    }
+    textarea{min-height:90px;resize:vertical}
+    button{
+      border:none; border-radius:12px; padding:12px 14px; font-weight:700;
+      cursor:pointer; background:var(--pri); color:white;
+    }
+    button.secondary{background:var(--sec)}
+    button.danger{background:var(--bad)}
+    button.good{background:var(--ok)}
+    button.small{padding:8px 10px;border-radius:10px;font-weight:700}
+    .muted{color:var(--muted);font-size:12px}
+    .badge{font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:#cbd5e1}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+    .item strong{display:block}
+    .item .meta{font-size:12px;color:var(--muted)}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{background:#0b1020;border:1px solid var(--line);color:#e5e7eb}
+    .tab.active{background:var(--pri);border-color:transparent}
+    .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:#cbd5e1}
+    .warn{color:var(--warn)}
+    .ok{color:var(--ok)}
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="top">
+    <div>
+      <div style="font-weight:800">Treino PWA — Teste 1 (Offline)</div>
+      <div class="sub" id="headerSub">Deslogado</div>
+    </div>
+    <div class="row">
+      <span class="badge" id="netBadge">offline</span>
+      <button class="secondary small" id="btnLogout" style="display:none">Sair</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <!-- LEFT -->
+    <div class="col">
+      <div class="card" id="cardAuth">
+        <h2>Entrar (modo DEMO local)</h2>
+        <div class="muted">Sem Supabase ainda. Isso é só para testar fluxo, offline e sessão.</div>
+        <div style="height:10px"></div>
+        <input id="inpEmail" type="email" placeholder="E-mail" autocomplete="email">
+        <input id="inpPass" type="password" placeholder="Senha (qualquer coisa)" autocomplete="current-password">
+        <select id="selRole">
+          <option value="student">Aluno</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button id="btnLogin">Entrar / Criar usuário</button>
+        <div class="muted" id="authMsg"></div>
+      </div>
+
+      <div class="card" id="cardSettings" style="display:none">
+        <h2>Configurações</h2>
+        <div class="row">
+          <div style="flex:1">
+            <label class="muted">Unidade</label>
+            <select id="selUnit">
+              <option value="kg">kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <label class="muted">Descanso padrão</label>
+            <select id="selRestDefault">
+              <option value="60">60s</option>
+              <option value="90" selected>90s</option>
+              <option value="120">120s</option>
+              <option value="180">180s</option>
+            </select>
+          </div>
+        </div>
+        <button class="secondary" id="btnSaveSettings">Salvar</button>
+        <div class="muted">O peso é salvo em <b>kg</b> internamente. Na tela, converte para lb se você escolher.</div>
+      </div>
+
+      <div class="card" id="cardSessionBanner" style="display:none">
+        <h2>Treino em andamento</h2>
+        <div class="muted" id="sessionBannerText"></div>
+        <div style="height:10px"></div>
+        <div class="row">
+          <button class="good" id="btnResumeSession">Retomar</button>
+          <button class="danger" id="btnFinishSessionQuick">Finalizar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col">
+      <div class="card" id="cardApp" style="display:none">
+        <div class="tabs">
+          <button class="tab active" data-tab="train">Treinar</button>
+          <button class="tab" data-tab="templates">Treinos</button>
+          <button class="tab" data-tab="catalog">Catálogo</button>
+          <button class="tab" data-tab="requests">Solicitações</button>
+          <button class="tab" data-tab="history">Histórico</button>
+          <button class="tab" data-tab="admin" id="tabAdmin" style="display:none">Admin</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- TAB: TRAIN -->
+        <section id="tab-train">
+          <h2>Treinar agora</h2>
+          <div class="muted">Escolha um treino e inicie. Tudo salva local. Pode fechar o app e voltar.</div>
+          <div style="height:10px"></div>
+
+          <div class="row">
+            <select id="selTemplateToStart" style="flex:1"></select>
+            <button id="btnStartSession">Iniciar treino</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div id="liveSessionArea" style="display:none">
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <div class="pill" id="liveSessionTitle">Sessão</div>
+                <div class="muted" id="liveSessionTime">00:00</div>
+              </div>
+              <div class="row">
+                <button class="secondary" id="btnOpenRest">Descanso</button>
+                <button class="danger" id="btnFinishSession">Finalizar treino</button>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div id="liveExercises" class="list"></div>
+          </div>
+
+          <div id="noLiveSession" class="muted">Nenhuma sessão em andamento.</div>
+        </section>
+
+        <!-- TAB: TEMPLATES -->
+        <section id="tab-templates" style="display:none">
+          <h2>Treinos (templates)</h2>
+          <div class="muted">Crie treinos por dia/grupo muscular e adicione exercícios (com combo A1/A2...).</div>
+          <div class="divider"></div>
+
+          <div class="card" style="background:#0b1020">
+            <h3>Novo treino</h3>
+            <input id="tplName" placeholder="Nome do treino (ex: Push A)">
+            <input id="tplDay" placeholder="Dia/Label (ex: Segunda, A, Push)">
+            <input id="tplGroups" placeholder="Grupos musculares (separe por vírgula: peito, ombro, tríceps)">
+            <textarea id="tplNotes" placeholder="Observações do treino (opcional)"></textarea>
+            <button id="btnCreateTemplate">Criar treino</button>
+          </div>
+
+          <div class="divider"></div>
+          <div id="templateList" class="list"></div>
+        </section>
+
+        <!-- TAB: CATALOG -->
+        <section id="tab-catalog" style="display:none">
+          <h2>Catálogo (exercícios ativos)</h2>
+          <div class="muted">Aqui o aluno enxerga só exercícios ativos. Vídeo ainda vazio.</div>
+          <div class="divider"></div>
+          <input id="catalogSearch" placeholder="Buscar exercício...">
+          <div style="height:10px"></div>
+          <div id="catalogList" class="list"></div>
+        </section>
+
+        <!-- TAB: REQUESTS -->
+        <section id="tab-requests" style="display:none">
+          <h2>Solicitar exercício</h2>
+          <div class="muted">O aluno solicita. O admin cadastra no painel Admin.</div>
+          <div class="divider"></div>
+
+          <input id="reqName" placeholder="Nome do exercício (ex: Remada baixa na polia)">
+          <textarea id="reqDetails" placeholder="Detalhes (equipamento, variação, observação)"></textarea>
+          <button id="btnSendRequest">Enviar solicitação</button>
+
+          <div class="divider"></div>
+          <h3>Minhas solicitações</h3>
+          <div id="myRequests" class="list"></div>
+        </section>
+
+        <!-- TAB: HISTORY -->
+        <section id="tab-history" style="display:none">
+          <h2>Histórico</h2>
+          <div class="muted">Aqui aparecem sessões finalizadas (local) e sets por exercício.</div>
+          <div class="divider"></div>
+          <div id="historyList" class="list"></div>
+        </section>
+
+        <!-- TAB: ADMIN -->
+        <section id="tab-admin" style="display:none">
+          <h2>Painel Admin</h2>
+          <div class="muted">Cadastrar/editar exercícios e aprovar solicitações.</div>
+          <div class="divider"></div>
+
+          <div class="card" style="background:#0b1020">
+            <h3>Novo exercício</h3>
+            <input id="exName" placeholder="Nome (ex: Supino reto com barra)">
+            <input id="exPrimary" placeholder="Músculo principal (ex: peito)">
+            <input id="exSecondary" placeholder="Secundários (vírgula) (ex: tríceps, deltoide anterior)">
+            <input id="exEquip" placeholder="Equipamento (ex: barra, halter, máquina, cabo)">
+            <input id="exType" placeholder="Tipo (compound/isolation/other)">
+            <textarea id="exInstr" placeholder="Instruções (opcional)"></textarea>
+            <textarea id="exNotes" placeholder="Observações (opcional)"></textarea>
+            <input id="exYoutube" placeholder="YouTube URL (deixe vazio por enquanto)">
+            <button id="btnCreateExercise" class="good">Cadastrar exercício</button>
+          </div>
+
+          <div class="divider"></div>
+          <h3>Solicitações pendentes</h3>
+          <div id="pendingRequests" class="list"></div>
+
+          <div class="divider"></div>
+          <h3>Todos os exercícios (admin)</h3>
+          <input id="adminSearch" placeholder="Buscar...">
+          <div style="height:10px"></div>
+          <div id="adminExercises" class="list"></div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL REST -->
+<div id="restModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;">
+  <div style="max-width:520px;margin:8vh auto;background:#111827;border:1px solid #374151;border-radius:16px;padding:14px">
+    <div class="row" style="justify-content:space-between">
+      <strong>Descanso</strong>
+      <button class="secondary small" id="btnCloseRest">Fechar</button>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:44px;font-weight:900" id="restClock">00:00</div>
+    <div class="muted" id="restInfo">Baseado em timestamp (não perde se fechar o app)</div>
+    <div style="height:10px"></div>
+    <div class="row">
+      <select id="selRestSeconds" style="flex:1">
+        <option value="30">30s</option>
+        <option value="60">60s</option>
+        <option value="90" selected>90s</option>
+        <option value="120">120s</option>
+        <option value="180">180s</option>
+      </select>
+      <button id="btnStartRest">Iniciar</button>
+      <button class="secondary" id="btnStopRest">Parar</button>
+    </div>
+    <div style="height:10px"></div>
+    <div class="muted">Se o app fechar, ao abrir ele recalcula quanto tempo passou.</div>
+  </div>
+</div>
+
+<!-- MODAL TEMPLATE ITEMS -->
+<div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;">
+  <div style="max-width:700px;margin:4vh auto;background:#111827;border:1px solid #374151;border-radius:16px;padding:14px;max-height:90vh;overflow-y:auto">
+    <div class="row" style="justify-content:space-between">
+      <strong id="templateModalTitle">Exercícios do Treino</strong>
+      <button class="secondary small" id="btnCloseTemplateModal">Fechar</button>
+    </div>
+    <div class="divider"></div>
+    
+    <!-- Add Exercise Form -->
+    <div class="card" style="background:#0b1020;margin-bottom:14px">
+      <h3>Adicionar exercício</h3>
+      <input id="tmplExSearch" placeholder="Buscar exercício..." autocomplete="off">
+      <div id="tmplExResults" style="max-height:200px;overflow-y:auto;margin:8px 0"></div>
+      
+      <div class="divider"></div>
+      
+      <div class="row">
+        <input id="tmplTargetSets" type="number" placeholder="Sets alvo" style="width:120px" value="3">
+        <input id="tmplTargetReps" placeholder="Reps (ex: 8-12)" style="flex:1" value="8-12">
+        <input id="tmplRestSec" type="number" placeholder="Descanso (s)" style="width:140px" value="90">
+      </div>
+      
+      <div class="row">
+        <select id="tmplComboType" style="flex:1">
+          <option value="">Sem combo</option>
+          <option value="superset">Superset</option>
+          <option value="biset">Biset</option>
+          <option value="triset">Triset</option>
+          <option value="giantset">Giant set</option>
+        </select>
+        <input id="tmplComboGroup" placeholder="Grupo (A,B,C)" style="width:100px" maxlength="1" value="A">
+        <input id="tmplComboOrder" type="number" placeholder="Ordem" style="width:90px" min="1" value="1">
+      </div>
+      
+      <button id="btnAddTemplateItem" class="good" disabled>Adicionar ao treino</button>
+    </div>
+    
+    <!-- Items List -->
+    <h3>Exercícios do treino</h3>
+    <div id="templateItemsList" class="list"></div>
+  </div>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
