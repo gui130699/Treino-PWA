@@ -477,6 +477,7 @@ async function addMultipleItems() {
       const restSeconds = parseInt($("tmplRestSec").value) || 90;
       
       const newItem = {
+        id: Date.now() + Math.random() + i, // Gera ID único
         template_id: ACTIVE_TEMPLATE_ID,
         template_day_id: CURRENT_DAY_ID,
         exercise_id: ex.id,
@@ -614,6 +615,7 @@ async function addTemplateItem() {
     const restSeconds = parseInt($("tmplRestSec").value) || 90;
     
     const newItem = {
+      id: Date.now() + Math.random(), // Gera ID único
       template_id: ACTIVE_TEMPLATE_ID,
       template_day_id: CURRENT_DAY_ID,
       exercise_id: SELECTED_EXERCISE.id,
