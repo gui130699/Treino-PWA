@@ -92,6 +92,14 @@
     }
     textarea{min-height:100px;resize:vertical;font-family:inherit}
     
+    /* Checkboxes */
+    input[type="checkbox"]{
+      width:20px;
+      height:20px;
+      cursor:pointer;
+      accent-color:var(--pri);
+    }
+    
     /* Buttons */
     button{
       border:none;
@@ -466,8 +474,8 @@
     <div class="card" style="background:var(--bg);margin-bottom:16px">
       <h3>➕ Adicionar exercício</h3>
       <label>Buscar exercício</label>
-      <input id="tmplExSearch" placeholder="Digite o nome do exercício..." autocomplete="off">
-      <div id="tmplExResults" style="max-height:200px;overflow-y:auto;margin:10px 0"></div>
+      <input id="tmplExSearch" placeholder="Digite para filtrar..." autocomplete="off">
+      <div id="tmplExResults" style="max-height:300px;overflow-y:auto;margin:10px 0;border:1px solid var(--line);border-radius:10px;padding:8px"></div>
       
       <div class="divider"></div>
       
@@ -477,10 +485,14 @@
           <input id="tmplTargetSets" type="number" placeholder="Ex: 3" value="3" min="1" max="10">
         </div>
         <div style="flex:1">
-          <label>Reps alvo</label>
+          <label>Reps alvo (simples)</label>
           <input id="tmplTargetReps" placeholder="Ex: 8-12" value="8-12">
         </div>
       </div>
+      
+      <label>Repetições personalizadas (opcional)</label>
+      <textarea id="tmplCustomReps" placeholder="Ex: 10, 10, 8, 6 (uma por linha ou separado por vírgula)&#10;Ou: 3x10 + 1x6" style="min-height:70px"></textarea>
+      <div class="muted">Se preenchido, sobrescreve "Reps alvo". Ex: para fazer 3 séries de 10 e 1 de 6, digite: 10, 10, 10, 6</div>
       
       <label>Tempo de descanso deste exercício (segundos)</label>
       <select id="tmplRestSec">
@@ -506,8 +518,10 @@
         <input id="tmplComboGroup" placeholder="Grupo" style="width:80px" maxlength="1" value="A">
         <input id="tmplComboOrder" type="number" placeholder="Ordem" style="width:80px" min="1" value="1">
       </div>
+      <div class="muted" id="comboHint" style="display:none;color:var(--ok)">💡 Modo combo ativado! Selecione múltiplos exercícios e clique em "Adicionar selecionados"</div>
       
       <button id="btnAddTemplateItem" class="good" disabled>Adicionar ao treino</button>
+      <button id="btnAddMultipleItems" class="good" style="display:none" disabled>Adicionar selecionados ao combo</button>
     </div>
     
     <!-- Items List -->

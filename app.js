@@ -243,27 +243,115 @@ async function createTemplate() {
 
 let CURRENT_TEMPLATE_ID = null;
 let SELECTED_EXERCISE = null;
+let SELECTED_EXERCISES = []; // Para modo combo
+let IS_COMBO_MODE = false;
 
 async function openTemplateItems(templateId) {
   const t = await DB.get("templates", templateId);
   if (!t) return;
   
-  CURRENT_TEMPLATE_ID = templateId;
+  ACTIVE_TEMPLATE_ID = templateId;
   SELECTED_EXERCISE = null;
+  SELECTED_EXERCISES = [];
+  IS_COMBO_MODE = false;
   
   $("templateModalTitle").textContent = `Exercícios: ${t.name}`;
   $("tmplExSearch").value = "";
-  $("tmplExResults").innerHTML = "";
-  $("tmplTargetSets").value = "3";
-  $("tmplTargetReps").value = "8-12";
-  $("tmplRestSec").value = "90";
-  $("tmplComboType").value = "";
-  $("tmplComboGroup").value = "A";
-  $("tmplComboOrder").value = "1";
+  $("tmplSets").value = "3";
+  $("tmplRepsMin").value = "8";
+  $("tmplRepsMax").value = "12";
+  $("tmplCustomReps").value = "";
+  $("tmplRest").value = "90";
+  $("tmplComboType").value = "none";
   $("btnAddTemplateItem").disabled = true;
+  $("btnAddMultipleItems").style.display = "none";
+  $("btnAddMultipleItems").disabled = true;
+  $("comboModeHint").style.display = "none";
   
-  await renderTemplateItemsList();
+  await loadTemplateItems();
+  searchExercisesForTemplate(); // Load all exercises on open
   $("templateModal").style.display = "block";
+}
+
+function toggleComboMode() {
+  const comboType = $("tmplComboType").value;
+  IS_COMBO_MODE = comboType !== "none";
+  
+  if (IS_COMBO_MODE) {
+    $("comboModeHint").style.display = "block";
+    $("btnAddTemplateItem").style.display = "none";
+    $("btnAddMultipleItems").style.display = "inline-block";
+    $("btnAddMultipleItems").disabled = true;
+    SELECTED_EXERCISES = [];
+    SELECTED_EXERCISE = null;
+  } else {
+    $("comboModeHint").style.display = "none";
+    $("btnAddTemplateItem").style.display = "inline-block";
+    $("btnAddMultipleItems").style.display = "none";
+    $("btnAddTemplateItem").disabled = true;
+    SELECTED_EXERCISES = [];
+    SELECTED_EXERCISE = null;
+  }
+  
+  // Re-render current list with new selection mode
+  searchExercisesForTemplate();
+}
+
+async function addMultipleItems() {
+  if (!SELECTED_EXERCISES.length) {
+    showToast("Selecione pelo menos um exercício", "error");
+    return;
+  }
+  
+  if (!ACTIVE_TEMPLATE_ID) {
+    showToast("Nenhum template selecionado", "error");
+    return;
+  }
+  
+  const customReps = $("tmplCustomReps").value.trim();
+  const comboType = $("tmplComboType").value;
+  const comboGroup = Date.now(); // Same group for all
+  
+  try {
+    // Get current max order
+    const items = await DB.byIndex("template_items", "template_id", ACTIVE_TEMPLATE_ID);
+    let maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) : 0;
+    
+    // Add all selected exercises with incrementing combo_order
+    for (let i = 0; i < SELECTED_EXERCISES.length; i++) {
+      const ex = SELECTED_EXERCISES[i];
+      const newItem = {
+        template_id: ACTIVE_TEMPLATE_ID,
+        exercise_id: ex.id,
+        order: ++maxOrder,
+        sets: parseInt($("tmplSets").value) || 3,
+        reps_min: parseInt($("tmplRepsMin").value) || 8,
+        reps_max: parseInt($("tmplRepsMax").value) || 12,
+        rest_seconds: parseInt($("tmplRest").value) || 60,
+        combo_type: comboType,
+        combo_group: comboGroup,
+        combo_order: i + 1,
+        custom_reps: customReps || null
+      };
+      
+      await DB.put("template_items", newItem);
+    }
+    
+    showToast(`${SELECTED_EXERCISES.length} exercícios adicionados ao ${comboType}`, "success");
+    
+    // Reset state
+    SELECTED_EXERCISES = [];
+    $("tmplExSearch").value = "";
+    $("tmplCustomReps").value = "";
+    $("btnAddMultipleItems").disabled = true;
+    
+    await loadTemplateItems();
+    searchExercisesForTemplate();
+    
+  } catch (err) {
+    console.error("Erro ao adicionar exercícios:", err);
+    showToast("Erro ao adicionar exercícios", "error");
+  }
 }
 
 function closeTemplateModal() {
@@ -274,91 +362,138 @@ function closeTemplateModal() {
 
 async function searchExercisesForTemplate() {
   const q = $("tmplExSearch").value.trim().toLowerCase();
+  const all = await DB.byIndex("exercises", "is_active", true);
+  const filtered = q.length >= 1 
+    ? all.filter(e => e.name.toLowerCase().includes(q))
+    : all;
+  
+  const sorted = filtered.sort((a,b) => a.name.localeCompare(b.name));
+  renderExerciseList(sorted.slice(0, 50), q);
+}
+
+function renderExerciseList(exercises, query) {
   const results = $("tmplExResults");
   
-  if (q.length < 2) {
-    results.innerHTML = "<div class='muted'>Digite pelo menos 2 caracteres...</div>";
-    SELECTED_EXERCISE = null;
-    $("btnAddTemplateItem").disabled = true;
-    return;
-  }
-  
-  const all = await DB.byIndex("exercises", "is_active", true);
-  const filtered = all.filter(e => e.name.toLowerCase().includes(q)).slice(0, 10);
-  
-  if (!filtered.length) {
-    results.innerHTML = "<div class='muted'>Nenhum exercício encontrado</div>";
-    SELECTED_EXERCISE = null;
-    $("btnAddTemplateItem").disabled = true;
+  if (!exercises.length) {
+    results.innerHTML = "<div class='muted' style='padding:10px'>Nenhum exercício encontrado</div>";
+    if (!IS_COMBO_MODE) {
+      SELECTED_EXERCISE = null;
+      $("btnAddTemplateItem").disabled = true;
+    }
     return;
   }
   
   results.innerHTML = "";
-  for (const ex of filtered) {
+  
+  for (const ex of exercises) {
     const div = document.createElement("div");
     div.className = "item";
     div.style.cursor = "pointer";
-    div.style.padding = "8px";
-    div.innerHTML = `
-      <div>
-        <strong>${escapeHtml(ex.name)}</strong>
-        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${escapeHtml(ex.equipment)}</div>
-      </div>
-    `;
-    div.onclick = () => {
-      SELECTED_EXERCISE = ex;
-      $("btnAddTemplateItem").disabled = false;
-      // highlight
-      results.querySelectorAll(".item").forEach(i => i.style.background = "");
-      div.style.background = "#1e293b";
-    };
+    div.style.padding = "10px";
+    div.style.alignItems = "center";
+    
+    if (IS_COMBO_MODE) {
+      // Modo combo: checkboxes
+      const isSelected = SELECTED_EXERCISES.some(e => e.id === ex.id);
+      div.innerHTML = `
+        <input type="checkbox" ${isSelected ? 'checked' : ''} data-ex-id="${ex.id}" style="margin-right:10px">
+        <div style="flex:1">
+          <strong>${escapeHtml(ex.name)}</strong>
+          <div class="meta">${escapeHtml(ex.primary_muscle)} • ${escapeHtml(ex.equipment)}</div>
+        </div>
+      `;
+      
+      const checkbox = div.querySelector('input[type="checkbox"]');
+      checkbox.onclick = (e) => {
+        e.stopPropagation();
+        if (checkbox.checked) {
+          if (!SELECTED_EXERCISES.some(e => e.id === ex.id)) {
+            SELECTED_EXERCISES.push(ex);
+          }
+        } else {
+          SELECTED_EXERCISES = SELECTED_EXERCISES.filter(e => e.id !== ex.id);
+        }
+        $("btnAddMultipleItems").disabled = SELECTED_EXERCISES.length === 0;
+      };
+      
+      div.onclick = () => {
+        checkbox.checked = !checkbox.checked;
+        checkbox.onclick({ stopPropagation: () => {} });
+      };
+    } else {
+      // Modo normal: seleção única
+      div.innerHTML = `
+        <div style="flex:1">
+          <strong>${escapeHtml(ex.name)}</strong>
+          <div class="meta">${escapeHtml(ex.primary_muscle)} • ${escapeHtml(ex.equipment)}</div>
+        </div>
+      `;
+      
+      div.onclick = () => {
+        SELECTED_EXERCISE = ex;
+        $("btnAddTemplateItem").disabled = false;
+        // highlight
+        results.querySelectorAll(".item").forEach(i => i.style.background = "");
+        div.style.background = "#1e293b";
+      };
+    }
+    
     results.appendChild(div);
+  }
+  
+  if (IS_COMBO_MODE) {
+    $("btnAddMultipleItems").disabled = SELECTED_EXERCISES.length === 0;
   }
 }
 
 async function addTemplateItem() {
-  if (!SELECTED_EXERCISE || !CURRENT_TEMPLATE_ID) return;
+  if (!SELECTED_EXERCISE || !ACTIVE_TEMPLATE_ID) return;
   
-  const targetSets = parseInt($("tmplTargetSets").value, 10) || null;
-  const targetReps = $("tmplTargetReps").value.trim() || "";
-  const restSeconds = parseInt($("tmplRestSec").value, 10) || 90;
+  const customReps = $("tmplCustomReps").value.trim();
+  const comboType = $("tmplComboType").value;
   
-  const combo_type = $("tmplComboType").value.trim() || null;
-  let combo_group = null, combo_order = null;
-  if (combo_type) {
-    combo_group = $("tmplComboGroup").value.trim().toUpperCase() || "A";
-    combo_order = parseInt($("tmplComboOrder").value, 10) || 1;
+  try {
+    // Get current max order
+    const items = await DB.byIndex("template_items", "template_id", ACTIVE_TEMPLATE_ID);
+    let maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) : 0;
+    
+    const newItem = {
+      template_id: ACTIVE_TEMPLATE_ID,
+      exercise_id: SELECTED_EXERCISE.id,
+      order: maxOrder + 1,
+      sets: parseInt($("tmplSets").value) || 3,
+      reps_min: parseInt($("tmplRepsMin").value) || 8,
+      reps_max: parseInt($("tmplRepsMax").value) || 12,
+      rest_seconds: parseInt($("tmplRest").value) || 60,
+      combo_type: comboType !== "none" ? comboType : null,
+      combo_group: null,
+      combo_order: null,
+      custom_reps: customReps || null
+    };
+    
+    await DB.put("template_items", newItem);
+    showToast("Exercício adicionado ao treino!", "success");
+    
+    // Reset
+    SELECTED_EXERCISE = null;
+    $("tmplExSearch").value = "";
+    $("tmplCustomReps").value = "";
+    $("btnAddTemplateItem").disabled = true;
+    
+    await loadTemplateItems();
+    searchExercisesForTemplate();
+    
+  } catch (err) {
+    console.error("Erro ao adicionar exercício:", err);
+    showToast("Erro ao adicionar exercício", "error");
   }
-  
-  await DB.put("template_items", {
-    id: uid(),
-    template_id: CURRENT_TEMPLATE_ID,
-    exercise_id: SELECTED_EXERCISE.id,
-    sort_order: Date.now(),
-    target_sets: targetSets,
-    target_reps: targetReps,
-    rest_seconds: restSeconds,
-    combo_type,
-    combo_group,
-    combo_order,
-    notes: ""
-  });
-  
-  // reset
-  SELECTED_EXERCISE = null;
-  $("tmplExSearch").value = "";
-  $("tmplExResults").innerHTML = "";
-  $("btnAddTemplateItem").disabled = true;
-  
-  showToast('Exercício adicionado ao treino!', 'success');
-  await renderTemplateItemsList();
 }
 
-async function renderTemplateItemsList() {
-  if (!CURRENT_TEMPLATE_ID) return;
+async function loadTemplateItems() {
+  if (!ACTIVE_TEMPLATE_ID) return;
   
-  const items = await DB.byIndex("template_items", "template_id", CURRENT_TEMPLATE_ID);
-  items.sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  const items = await DB.byIndex("template_items", "template_id", ACTIVE_TEMPLATE_ID);
+  items.sort((a,b) => (a.order||0) - (b.order||0));
   
   const exMap = new Map((await DB.all("exercises")).map(e => [e.id, e]));
   const list = $("templateItemsList");
@@ -373,21 +508,23 @@ async function renderTemplateItemsList() {
     const ex = exMap.get(it.exercise_id);
     if (!ex) continue;
     
-    const combo = it.combo_type ? ` • ${it.combo_group}${it.combo_order} ${it.combo_type}` : "";
+    const repsDisplay = it.custom_reps || `${it.reps_min}-${it.reps_max}`;
+    const comboInfo = it.combo_type && it.combo_type !== "none" ? ` • ${it.combo_type}` : "";
     
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
       <div style="flex:1">
         <strong>${escapeHtml(ex.name)}</strong>
-        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${it.target_sets||"-"}x${it.target_reps||"-"} • ${it.rest_seconds||"-"}s${combo}</div>
+        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${it.sets}x${repsDisplay} • ${it.rest_seconds}s${comboInfo}</div>
       </div>
       <button class="danger small" data-del="${it.id}">Remover</button>
     `;
     
     div.querySelector(`[data-del="${it.id}"]`).onclick = async () => {
       await DB.del("template_items", it.id);
-      await renderTemplateItemsList();
+      showToast("Exercício removido", "success");
+      await loadTemplateItems();
     };
     
     list.appendChild(div);
@@ -1027,6 +1164,8 @@ async function init() {
   $("btnCloseTemplateModal").onclick = closeTemplateModal;
   $("tmplExSearch").oninput = searchExercisesForTemplate;
   $("btnAddTemplateItem").onclick = addTemplateItem;
+  $("btnAddMultipleItems").onclick = addMultipleItems;
+  $("tmplComboType").onchange = toggleComboMode;
 
   wireTabs();
 
