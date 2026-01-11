@@ -505,12 +505,6 @@ async function addMultipleItems() {
   }
 }
 
-function closeTemplateModal() {
-  $("templateModal").style.display = "none";
-  CURRENT_TEMPLATE_ID = null;
-  SELECTED_EXERCISE = null;
-}
-
 async function searchExercisesForTemplate() {
   const q = $("tmplExSearch").value.trim().toLowerCase();
   const all = await DB.byIndex("exercises", "is_active", true);
@@ -1304,17 +1298,21 @@ async function init() {
   };
   
   $("btnRegister").onclick = () => {
-    $("registerModal").style.display = "block";
-    // Limpar campos
-    $("regName").value = "";
-    $("regEmail").value = "";
-    $("regPassword").value = "";
-    $("regAge").value = "";
-    $("regWeight").value = "";
-    $("regHeight").value = "";
-    $("regGender").value = "";
-    $("regRole").value = "student";
-    $("registerMsg").textContent = "";
+    try {
+      $("registerModal").style.display = "block";
+      // Limpar campos
+      $("regName").value = "";
+      $("regEmail").value = "";
+      $("regPassword").value = "";
+      $("regAge").value = "";
+      $("regWeight").value = "";
+      $("regHeight").value = "";
+      $("regGender").value = "";
+      $("regRole").value = "student";
+      $("registerMsg").textContent = "";
+    } catch (err) {
+      console.error("Erro ao abrir modal de registro:", err);
+    }
   };
   
   $("btnCloseRegisterModal").onclick = () => {
