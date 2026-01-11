@@ -426,17 +426,17 @@ function closeTemplateModal() {
 
 function toggleComboMode() {
   const comboType = $("tmplComboType").value;
-  IS_COMBO_MODE = comboType !== "none";
+  IS_COMBO_MODE = comboType !== "" && comboType !== "none";
   
   if (IS_COMBO_MODE) {
-    $("comboModeHint").style.display = "block";
+    $("comboHint").style.display = "block";
     $("btnAddTemplateItem").style.display = "none";
     $("btnAddMultipleItems").style.display = "inline-block";
     $("btnAddMultipleItems").disabled = true;
     SELECTED_EXERCISES = [];
     SELECTED_EXERCISE = null;
   } else {
-    $("comboModeHint").style.display = "none";
+    $("comboHint").style.display = "none";
     $("btnAddTemplateItem").style.display = "inline-block";
     $("btnAddMultipleItems").style.display = "none";
     $("btnAddTemplateItem").disabled = true;
@@ -508,10 +508,11 @@ async function addMultipleItems() {
 
 async function searchExercisesForTemplate() {
   const q = $("tmplExSearch").value.trim().toLowerCase();
-  const all = await DB.byIndex("exercises", "is_active", true);
+  const all = await DB.all("exercises");
+  const active = all.filter(e => e.is_active);
   const filtered = q.length >= 1 
-    ? all.filter(e => e.name.toLowerCase().includes(q))
-    : all;
+    ? active.filter(e => e.name.toLowerCase().includes(q))
+    : active;
   
   const sorted = filtered.sort((a,b) => a.name.localeCompare(b.name));
   renderExerciseList(sorted.slice(0, 50), q);
