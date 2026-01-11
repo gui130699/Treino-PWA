@@ -295,9 +295,6 @@ async function createTemplate() {
 
 let CURRENT_TEMPLATE_ID = null;
 let CURRENT_DAY_ID = null;
-let SELECTED_EXERCISE = null;
-let SELECTED_EXERCISES = []; // Para modo combo
-let IS_COMBO_MODE = false;
 
 // ===== TEMPLATE DAYS =====
 async function openTemplateDays(templateId) {
