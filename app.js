@@ -616,13 +616,6 @@ async function addTemplateItem() {
       combo_order: null,
       custom_reps: customReps || null
     };
-      reps_max: parseInt($("tmplRepsMax").value) || 12,
-      rest_seconds: parseInt($("tmplRest").value) || 60,
-      combo_type: comboType !== "none" ? comboType : null,
-      combo_group: null,
-      combo_order: null,
-      custom_reps: customReps || null
-    };
     
     await DB.put("template_items", newItem);
     showToast("Exercício adicionado ao treino!", "success");
