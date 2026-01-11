@@ -1,9 +1,9 @@
 {
-  "name": "Treino PWA (Teste 1)",
-  "short_name": "Treino",
+  "name": "💪 Treino PWA - Gerenciador de Treinos",
+  "short_name": "Treino PWA",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0b1020",
-  "theme_color": "#111827",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
   "icons": []
 }

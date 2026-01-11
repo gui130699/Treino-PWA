@@ -10,52 +10,200 @@
 
   <style>
     :root{
-      --bg:#0b1020; --card:#111827; --muted:#9ca3af; --line:#374151;
-      --pri:#2563eb; --sec:#374151; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+      --bg:#0f172a; --card:#1e293b; --card-hover:#334155; --muted:#94a3b8; --line:#475569;
+      --pri:#3b82f6; --pri-hover:#2563eb; --sec:#64748b; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+      --text:#f1f5f9; --text-dim:#cbd5e1;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,.3), 0 2px 4px -1px rgba(0,0,0,.18);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.4), 0 4px 6px -2px rgba(0,0,0,.25);
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#e5e7eb}
-    header{position:sticky;top:0;background:var(--card);padding:14px 16px;border-bottom:1px solid var(--line);z-index:5}
-    header .top{display:flex;gap:10px;align-items:center;justify-content:space-between}
-    header .sub{color:var(--muted);font-size:12px;margin-top:4px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.6;
+      min-height:100vh;
+    }
+    
+    /* Header */
+    header{
+      position:sticky;
+      top:0;
+      background:var(--card);
+      padding:16px 20px;
+      border-bottom:1px solid var(--line);
+      z-index:100;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+    }
+    header .top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    header h1{font-size:20px;font-weight:800;color:var(--text)}
+    header .sub{color:var(--muted);font-size:13px;margin-top:4px}
 
-    main{max-width:980px;margin:0 auto;padding:16px}
-    .grid{display:grid;grid-template-columns: 1fr;gap:12px}
-    @media(min-width:900px){ .grid{grid-template-columns: 330px 1fr} }
-
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
-    h2,h3{margin:0 0 10px 0}
-    h2{font-size:16px}
-    h3{font-size:14px;color:#d1d5db}
+    /* Layout */
+    main{max-width:1200px;margin:0 auto;padding:20px 16px}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:768px){.grid{grid-template-columns:360px 1fr;gap:20px}}
+    
+    /* Cards */
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:20px;
+      box-shadow:var(--shadow);
+      transition:all 0.2s ease;
+    }
+    .card:hover{box-shadow:var(--shadow-lg);border-color:var(--pri)}
+    
+    /* Typography */
+    h2,h3{margin:0 0 12px 0;color:var(--text)}
+    h2{font-size:18px;font-weight:700}
+    h3{font-size:15px;font-weight:600;color:var(--text-dim)}
+    
+    /* Flex utilities */
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .col{display:flex;flex-direction:column;gap:10px}
+    .col{display:flex;flex-direction:column;gap:12px}
 
+    /* Form elements */
+    label{
+      display:block;
+      font-size:13px;
+      font-weight:600;
+      color:var(--text-dim);
+      margin-bottom:6px;
+    }
+    
     input, select, textarea{
-      width:100%; padding:12px; border-radius:12px; border:1px solid var(--line);
-      background:#0b1020; color:#e5e7eb; outline:none;
+      width:100%;
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:var(--bg);
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+      transition:all 0.2s ease;
     }
-    textarea{min-height:90px;resize:vertical}
+    input:focus, select:focus, textarea:focus{
+      border-color:var(--pri);
+      box-shadow:0 0 0 3px rgba(59,130,246,0.1);
+    }
+    textarea{min-height:100px;resize:vertical;font-family:inherit}
+    
+    /* Buttons */
     button{
-      border:none; border-radius:12px; padding:12px 14px; font-weight:700;
-      cursor:pointer; background:var(--pri); color:white;
+      border:none;
+      border-radius:10px;
+      padding:12px 18px;
+      font-weight:600;
+      font-size:14px;
+      cursor:pointer;
+      background:var(--pri);
+      color:white;
+      transition:all 0.2s ease;
+      box-shadow:var(--shadow);
     }
+    button:hover{background:var(--pri-hover);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+    button:active{transform:translateY(0)}
+    button:disabled{opacity:0.5;cursor:not-allowed;transform:none}
     button.secondary{background:var(--sec)}
+    button.secondary:hover{background:#475569}
     button.danger{background:var(--bad)}
+    button.danger:hover{background:#dc2626}
     button.good{background:var(--ok)}
-    button.small{padding:8px 10px;border-radius:10px;font-weight:700}
-    .muted{color:var(--muted);font-size:12px}
-    .badge{font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:#cbd5e1}
-    .divider{height:1px;background:var(--line);margin:12px 0}
-    .list{display:flex;flex-direction:column;gap:10px}
-    .item{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
-    .item strong{display:block}
-    .item .meta{font-size:12px;color:var(--muted)}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{background:#0b1020;border:1px solid var(--line);color:#e5e7eb}
-    .tab.active{background:var(--pri);border-color:transparent}
-    .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:#cbd5e1}
+    button.good:hover{background:#059669}
+    button.small{padding:8px 12px;font-size:13px}
+    
+    /* Badges & Pills */
+    .badge{
+      display:inline-block;
+      font-size:12px;
+      padding:5px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:var(--text-dim);
+      font-weight:600;
+    }
+    .pill{
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:13px;
+      color:var(--text-dim);
+      font-weight:600;
+      background:var(--card);
+    }
+    
+    /* Utility classes */
+    .muted{color:var(--muted);font-size:13px;line-height:1.5}
+    .divider{height:1px;background:var(--line);margin:16px 0}
     .warn{color:var(--warn)}
     .ok{color:var(--ok)}
+    
+    /* Lists */
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:14px;
+      display:flex;
+      gap:12px;
+      justify-content:space-between;
+      align-items:flex-start;
+      background:var(--bg);
+      transition:all 0.2s ease;
+    }
+    .item:hover{background:var(--card-hover);border-color:var(--pri)}
+    .item strong{display:block;font-size:15px;margin-bottom:4px}
+    .item .meta{font-size:12px;color:var(--muted);line-height:1.4}
+    
+    /* Tabs */
+    .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .tab{
+      background:var(--bg);
+      border:1px solid var(--line);
+      color:var(--text-dim);
+      padding:10px 16px;
+      border-radius:10px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    .tab:hover{background:var(--card-hover);border-color:var(--pri)}
+    .tab.active{background:var(--pri);border-color:var(--pri);color:white}
+    
+    /* Toast notifications */
+    .toast{
+      position:fixed;
+      bottom:20px;
+      right:20px;
+      background:var(--card);
+      color:var(--text);
+      padding:14px 18px;
+      border-radius:10px;
+      box-shadow:var(--shadow-lg);
+      border:1px solid var(--line);
+      z-index:1000;
+      animation:slideIn 0.3s ease;
+      max-width:90%;
+      font-size:14px;
+    }
+    .toast.success{border-color:var(--ok);background:#064e3b}
+    .toast.error{border-color:var(--bad);background:#7f1d1d}
+    @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+    
+    /* Mobile improvements */
+    @media(max-width:767px){
+      main{padding:16px 12px}
+      .card{padding:16px}
+      h2{font-size:16px}
+      button{padding:10px 14px;font-size:13px}
+      .tabs{gap:4px}
+      .tab{padding:8px 12px;font-size:13px}
+    }
   </style>
 </head>
 
@@ -63,7 +211,7 @@
 <header>
   <div class="top">
     <div>
-      <div style="font-weight:800">Treino PWA — Teste 1 (Offline)</div>
+      <h1>💪 Treino PWA</h1>
       <div class="sub" id="headerSub">Deslogado</div>
     </div>
     <div class="row">
@@ -92,26 +240,13 @@
       </div>
 
       <div class="card" id="cardSettings" style="display:none">
-        <h2>Configurações</h2>
-        <div class="row">
-          <div style="flex:1">
-            <label class="muted">Unidade</label>
-            <select id="selUnit">
-              <option value="kg">kg</option>
-              <option value="lb">lb</option>
-            </select>
-          </div>
-          <div style="flex:1">
-            <label class="muted">Descanso padrão</label>
-            <select id="selRestDefault">
-              <option value="60">60s</option>
-              <option value="90" selected>90s</option>
-              <option value="120">120s</option>
-              <option value="180">180s</option>
-            </select>
-          </div>
-        </div>
-        <button class="secondary" id="btnSaveSettings">Salvar</button>
+        <h2>⚙️ Configurações</h2>
+        <label>Unidade de peso</label>
+        <select id="selUnit">
+          <option value="kg">Kilogramas (kg)</option>
+          <option value="lb">Libras (lb)</option>
+        </select>
+        <button class="secondary" id="btnSaveSettings">Salvar configurações</button>
         <div class="muted">O peso é salvo em <b>kg</b> internamente. Na tela, converte para lb se você escolher.</div>
       </div>
 
@@ -175,16 +310,47 @@
 
         <!-- TAB: TEMPLATES -->
         <section id="tab-templates" style="display:none">
-          <h2>Treinos (templates)</h2>
-          <div class="muted">Crie treinos por dia/grupo muscular e adicione exercícios (com combo A1/A2...).</div>
+          <h2>📋 Meus Treinos</h2>
+          <div class="muted">Crie treinos e adicione exercícios (com combos A1/A2 se quiser).</div>
           <div class="divider"></div>
 
-          <div class="card" style="background:#0b1020">
-            <h3>Novo treino</h3>
-            <input id="tplName" placeholder="Nome do treino (ex: Push A)">
-            <input id="tplDay" placeholder="Dia/Label (ex: Segunda, A, Push)">
-            <input id="tplGroups" placeholder="Grupos musculares (separe por vírgula: peito, ombro, tríceps)">
-            <textarea id="tplNotes" placeholder="Observações do treino (opcional)"></textarea>
+          <div class="card" style="background:var(--bg)">
+            <h3>➕ Novo treino</h3>
+            <label>Nome do treino</label>
+            <input id="tplName" placeholder="Ex: Push A, Pull B, Pernas, etc.">
+            
+            <label>Dia da semana</label>
+            <select id="tplDay">
+              <option value="">Selecione o dia (opcional)</option>
+              <option value="Segunda-feira">Segunda-feira</option>
+              <option value="Terça-feira">Terça-feira</option>
+              <option value="Quarta-feira">Quarta-feira</option>
+              <option value="Quinta-feira">Quinta-feira</option>
+              <option value="Sexta-feira">Sexta-feira</option>
+              <option value="Sábado">Sábado</option>
+              <option value="Domingo">Domingo</option>
+            </select>
+            
+            <label>Grupos musculares (selecione múltiplos)</label>
+            <select id="tplGroups" multiple style="min-height:120px">
+              <option value="peito">Peito</option>
+              <option value="costas">Costas</option>
+              <option value="pernas">Pernas (geral)</option>
+              <option value="quadríceps">Quadríceps</option>
+              <option value="posteriores">Posteriores de coxa</option>
+              <option value="glúteos">Glúteos</option>
+              <option value="ombro">Ombros</option>
+              <option value="bíceps">Bíceps</option>
+              <option value="tríceps">Tríceps</option>
+              <option value="abdômen">Abdômen</option>
+              <option value="panturrilha">Panturrilha</option>
+              <option value="trapézio">Trapézio</option>
+              <option value="antebraço">Antebraço</option>
+            </select>
+            <div class="muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar múltiplos</div>
+            
+            <label>Observações do treino (opcional)</label>
+            <textarea id="tplNotes" placeholder="Ex: Foco em volume, treino rápido, etc."></textarea>
             <button id="btnCreateTemplate">Criar treino</button>
           </div>
 
@@ -288,45 +454,64 @@
 </div>
 
 <!-- MODAL TEMPLATE ITEMS -->
-<div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;">
-  <div style="max-width:700px;margin:4vh auto;background:#111827;border:1px solid #374151;border-radius:16px;padding:14px;max-height:90vh;overflow-y:auto">
+<div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);">
+  <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
     <div class="row" style="justify-content:space-between">
-      <strong id="templateModalTitle">Exercícios do Treino</strong>
-      <button class="secondary small" id="btnCloseTemplateModal">Fechar</button>
+      <strong id="templateModalTitle" style="font-size:18px">Exercícios do Treino</strong>
+      <button class="secondary small" id="btnCloseTemplateModal">✕ Fechar</button>
     </div>
     <div class="divider"></div>
     
     <!-- Add Exercise Form -->
-    <div class="card" style="background:#0b1020;margin-bottom:14px">
-      <h3>Adicionar exercício</h3>
-      <input id="tmplExSearch" placeholder="Buscar exercício..." autocomplete="off">
-      <div id="tmplExResults" style="max-height:200px;overflow-y:auto;margin:8px 0"></div>
+    <div class="card" style="background:var(--bg);margin-bottom:16px">
+      <h3>➕ Adicionar exercício</h3>
+      <label>Buscar exercício</label>
+      <input id="tmplExSearch" placeholder="Digite o nome do exercício..." autocomplete="off">
+      <div id="tmplExResults" style="max-height:200px;overflow-y:auto;margin:10px 0"></div>
       
       <div class="divider"></div>
       
       <div class="row">
-        <input id="tmplTargetSets" type="number" placeholder="Sets alvo" style="width:120px" value="3">
-        <input id="tmplTargetReps" placeholder="Reps (ex: 8-12)" style="flex:1" value="8-12">
-        <input id="tmplRestSec" type="number" placeholder="Descanso (s)" style="width:140px" value="90">
+        <div style="flex:1">
+          <label>Sets alvo</label>
+          <input id="tmplTargetSets" type="number" placeholder="Ex: 3" value="3" min="1" max="10">
+        </div>
+        <div style="flex:1">
+          <label>Reps alvo</label>
+          <input id="tmplTargetReps" placeholder="Ex: 8-12" value="8-12">
+        </div>
       </div>
       
+      <label>Tempo de descanso deste exercício (segundos)</label>
+      <select id="tmplRestSec">
+        <option value="30">30 segundos</option>
+        <option value="45">45 segundos</option>
+        <option value="60">60 segundos (1 min)</option>
+        <option value="90" selected>90 segundos (1:30)</option>
+        <option value="120">120 segundos (2 min)</option>
+        <option value="180">180 segundos (3 min)</option>
+        <option value="240">240 segundos (4 min)</option>
+        <option value="300">300 segundos (5 min)</option>
+      </select>
+      
+      <label>Combo (opcional)</label>
       <div class="row">
-        <select id="tmplComboType" style="flex:1">
+        <select id="tmplComboType" style="flex:2">
           <option value="">Sem combo</option>
-          <option value="superset">Superset</option>
-          <option value="biset">Biset</option>
-          <option value="triset">Triset</option>
-          <option value="giantset">Giant set</option>
+          <option value="superset">Superset (A1/A2)</option>
+          <option value="biset">Biset (2 exercícios mesmo músculo)</option>
+          <option value="triset">Triset (3 exercícios)</option>
+          <option value="giantset">Giant set (4+ exercícios)</option>
         </select>
-        <input id="tmplComboGroup" placeholder="Grupo (A,B,C)" style="width:100px" maxlength="1" value="A">
-        <input id="tmplComboOrder" type="number" placeholder="Ordem" style="width:90px" min="1" value="1">
+        <input id="tmplComboGroup" placeholder="Grupo" style="width:80px" maxlength="1" value="A">
+        <input id="tmplComboOrder" type="number" placeholder="Ordem" style="width:80px" min="1" value="1">
       </div>
       
       <button id="btnAddTemplateItem" class="good" disabled>Adicionar ao treino</button>
     </div>
     
     <!-- Items List -->
-    <h3>Exercícios do treino</h3>
+    <h3>📝 Exercícios do treino</h3>
     <div id="templateItemsList" class="list"></div>
   </div>
 </div>

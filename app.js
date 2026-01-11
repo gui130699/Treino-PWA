@@ -8,7 +8,19 @@ const KG_TO_LB = 2.20462;
 const toLb = (kg) => +(kg * KG_TO_LB).toFixed(2);
 const toKg = (lb) => +(lb / KG_TO_LB).toFixed(3);
 
-let CURRENT = { email: null, role: null, unit: "kg", restDefault: 90 };
+let CURRENT = { email: null, role: null, unit: "kg" };
+
+// Toast notification system
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideIn 0.3s ease reverse';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
 
 // ---------- PWA ----------
 if ("serviceWorker" in navigator) {
@@ -48,23 +60,18 @@ async function loadSettings() {
   const s = await DB.get("settings", userKey);
   if (!s) {
     CURRENT.unit = "kg";
-    CURRENT.restDefault = 90;
     $("selUnit").value = "kg";
-    $("selRestDefault").value = "90";
     return;
   }
   CURRENT.unit = s.unit || "kg";
-  CURRENT.restDefault = s.restDefault || 90;
   $("selUnit").value = CURRENT.unit;
-  $("selRestDefault").value = String(CURRENT.restDefault);
 }
 async function saveSettings() {
   const userKey = `settings:${CURRENT.email}`;
   const unit = $("selUnit").value;
-  const restDefault = parseInt($("selRestDefault").value, 10);
-  await DB.put("settings", { userKey, unit, restDefault, updated_at: nowIso() });
+  await DB.put("settings", { userKey, unit, updated_at: nowIso() });
   CURRENT.unit = unit;
-  CURRENT.restDefault = restDefault;
+  showToast('Configurações salvas com sucesso!', 'success');
 }
 
 // ---------- SEED (some exercises to test quickly) ----------
@@ -142,7 +149,7 @@ function setHeader() {
     $("headerSub").textContent = "Deslogado";
     $("btnLogout").style.display = "none";
   } else {
-    $("headerSub").textContent = `${CURRENT.email} • ${CURRENT.role} • unidade: ${CURRENT.unit}`;
+    $("headerSub").textContent = `${CURRENT.email} • ${CURRENT.role} • ${CURRENT.unit}`;
     $("btnLogout").style.display = "inline-block";
   }
 }
@@ -205,9 +212,14 @@ async function listTemplates() {
 
 async function createTemplate() {
   const name = $("tplName").value.trim();
-  if (!name) return alert("Informe o nome do treino.");
-  const day = $("tplDay").value.trim();
-  const groups = $("tplGroups").value.split(",").map(s=>s.trim()).filter(Boolean);
+  if (!name) {
+    showToast('Informe o nome do treino', 'error');
+    return;
+  }
+  
+  const day = $("tplDay").value;
+  const groupsSelect = $("tplGroups");
+  const groups = Array.from(groupsSelect.selectedOptions).map(opt => opt.value);
   const notes = $("tplNotes").value.trim();
 
   await DB.put("templates", {
@@ -222,8 +234,10 @@ async function createTemplate() {
 
   $("tplName").value = "";
   $("tplDay").value = "";
-  $("tplGroups").value = "";
+  groupsSelect.selectedIndex = -1; // Deselect all
   $("tplNotes").value = "";
+  
+  showToast('Treino criado com sucesso!', 'success');
   await listTemplates();
 }
 
@@ -242,7 +256,7 @@ async function openTemplateItems(templateId) {
   $("tmplExResults").innerHTML = "";
   $("tmplTargetSets").value = "3";
   $("tmplTargetReps").value = "8-12";
-  $("tmplRestSec").value = String(CURRENT.restDefault);
+  $("tmplRestSec").value = "90";
   $("tmplComboType").value = "";
   $("tmplComboGroup").value = "A";
   $("tmplComboOrder").value = "1";
@@ -307,7 +321,7 @@ async function addTemplateItem() {
   
   const targetSets = parseInt($("tmplTargetSets").value, 10) || null;
   const targetReps = $("tmplTargetReps").value.trim() || "";
-  const restSeconds = parseInt($("tmplRestSec").value, 10) || CURRENT.restDefault;
+  const restSeconds = parseInt($("tmplRestSec").value, 10) || 90;
   
   const combo_type = $("tmplComboType").value.trim() || null;
   let combo_group = null, combo_order = null;
@@ -336,6 +350,7 @@ async function addTemplateItem() {
   $("tmplExResults").innerHTML = "";
   $("btnAddTemplateItem").disabled = true;
   
+  showToast('Exercício adicionado ao treino!', 'success');
   await renderTemplateItemsList();
 }
 
@@ -454,7 +469,10 @@ async function renderCatalog(isAdminView=false) {
 async function sendRequest() {
   const name = $("reqName").value.trim();
   const details = $("reqDetails").value.trim();
-  if (!name) return alert("Informe o nome do exercício.");
+  if (!name) {
+    showToast('Informe o nome do exercício', 'error');
+    return;
+  }
 
   await DB.put("exercise_requests", {
     id: uid(),
@@ -471,6 +489,7 @@ async function sendRequest() {
 
   $("reqName").value = "";
   $("reqDetails").value = "";
+  showToast('Solicitação enviada com sucesso!', 'success');
   await renderMyRequests();
   await renderPendingRequests();
 }
@@ -580,13 +599,20 @@ async function setLiveSession(value) {
 
 async function startSession() {
   const templateId = $("selTemplateToStart").value;
-  if (!templateId) return alert("Selecione um treino.");
+  if (!templateId) {
+    showToast('Selecione um treino', 'error');
+    return;
+  }
   const t = await DB.get("templates", templateId);
-  if (!t) return alert("Treino não encontrado.");
+  if (!t) {
+    showToast('Treino não encontrado', 'error');
+    return;
+  }
 
   const existing = await getLiveSession();
   if (existing?.status === "running") {
-    return alert("Já existe uma sessão em andamento. Finalize ou retome.");
+    showToast('Já existe uma sessão em andamento. Finalize ou retome.', 'error');
+    return;
   }
 
   const session = {
@@ -602,6 +628,7 @@ async function startSession() {
   await DB.put("sessions", session);
   await setLiveSession({ ...session });
 
+  showToast('Treino iniciado! Boa sorte! 💪', 'success');
   // prebuild exercise list based on template items
   await renderTrainUI();
 }
@@ -620,6 +647,7 @@ async function finishSession() {
   // stop rest
   await stopRest();
 
+  showToast('Treino finalizado! Ótimo trabalho! 💪', 'success');
   await renderTrainUI();
   await renderHistory();
 }
@@ -689,7 +717,7 @@ async function renderTrainUI() {
       : "Sem sets ainda";
 
     const combo = it.combo_type ? `${it.combo_group}${it.combo_order} ${it.combo_type}` : "";
-    const target = `${it.target_sets||"-"}x${it.target_reps||"-"} • ${it.rest_seconds||CURRENT.restDefault}s`;
+    const target = `${it.target_sets||"-"}x${it.target_reps||"-"} • ${it.rest_seconds||90}s`;
 
     const div = document.createElement("div");
     div.className = "item";
@@ -721,12 +749,21 @@ async function renderTrainUI() {
     btnAdd.onclick = async () => {
       const wTxt = (inpW.value||"").trim().replace(",",".");
       const rTxt = (inpR.value||"").trim();
-      if (!wTxt) return alert("Informe o peso.");
+      if (!wTxt) {
+        showToast('Informe o peso', 'error');
+        return;
+      }
       const reps = rTxt ? parseInt(rTxt,10) : null;
-      if (rTxt && isNaN(reps)) return alert("Reps inválidas.");
+      if (rTxt && isNaN(reps)) {
+        showToast('Reps inválidas', 'error');
+        return;
+      }
 
       const weightUI = parseFloat(wTxt);
-      if (isNaN(weightUI) || weightUI <= 0) return alert("Peso inválido.");
+      if (isNaN(weightUI) || weightUI <= 0) {
+        showToast('Peso inválido', 'error');
+        return;
+      }
 
       const weightKg = (CURRENT.unit === "kg") ? weightUI : toKg(weightUI);
 
@@ -749,14 +786,14 @@ async function renderTrainUI() {
       inpR.value = "";
 
       // auto start rest with template rest
-      const restSec = it.rest_seconds || CURRENT.restDefault;
+      const restSec = it.rest_seconds || 90;
       await startRest(restSec);
 
       await renderTrainUI();
     };
 
     btnRest.onclick = async () => {
-      const restSec = it.rest_seconds || CURRENT.restDefault;
+      const restSec = it.rest_seconds || 90;
       await startRest(restSec);
       openRestModal();
     };
@@ -861,7 +898,8 @@ async function renderHistory() {
         arr.push(set);
         byEx.set(set.exercise_id, arr);
       }
-      alert(`Detalhes (resumo)\n\nExercícios: ${byEx.size}\nSets: ${sets.length}\nVolume: ${volKg.toFixed(0)}\n\n(Gráficos entram na próxima etapa)`);
+      const msg = `📊 Detalhes do Treino\n\nExercícios: ${byEx.size}\nSets totais: ${sets.length}\nVolume (kg×reps): ${volKg.toFixed(0)}\n\n💡 Gráficos de progresso virão na próxima versão!`;
+      alert(msg);
     };
     root.appendChild(div);
   }
@@ -875,7 +913,10 @@ async function renderHistory() {
 async function createExerciseAdmin() {
   const name = $("exName").value.trim();
   const primary = $("exPrimary").value.trim();
-  if (!name || !primary) return alert("Informe nome e músculo principal.");
+  if (!name || !primary) {
+    showToast('Informe nome e músculo principal', 'error');
+    return;
+  }
 
   const sec = $("exSecondary").value.split(",").map(s=>s.trim()).filter(Boolean);
   const equip = $("exEquip").value.trim() || "other";
@@ -908,6 +949,7 @@ async function createExerciseAdmin() {
   $("exNotes").value = "";
   $("exYoutube").value = "";
 
+  showToast('Exercício cadastrado com sucesso!', 'success');
   await renderCatalog(true);
   await renderCatalog(false);
 }
@@ -947,7 +989,7 @@ async function init() {
 
   $("btnLogout").onclick = async () => {
     await demoLogout();
-    CURRENT = { email:null, role:null, unit:"kg", restDefault:90 };
+    CURRENT = { email:null, role:null, unit:"kg" };
     setHeader(); showApp(false);
   };
 
@@ -1018,7 +1060,7 @@ async function bootstrap(email, role) {
   setTabs("train");
 
   // set default rest in modal select
-  $("selRestSeconds").value = String(CURRENT.restDefault);
+  $("selRestSeconds").value = "90";
 
   await listTemplates();
   await renderCatalog(false);
