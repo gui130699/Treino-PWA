@@ -66,17 +66,28 @@ async function demoLogin(email, password, rememberMe = true) {
   return { email, role: existing.role };
 }
 
-async function demoRegister(email, password, role) {
+async function demoRegister(userData) {
+  const { email, password, name, age, weight, height, gender, role } = userData;
+  
   const existing = await DB.get("users", email);
   
   if (existing) {
     return { error: "Usuário já existe. Use 'Entrar' para fazer login." };
   }
   
+  if (password.length < 6) {
+    return { error: "A senha deve ter pelo menos 6 caracteres." };
+  }
+  
   // Criar novo usuário
   await DB.put("users", { 
     email, 
     password, 
+    name,
+    age: parseInt(age) || null,
+    weight: parseFloat(weight) || null,
+    height: parseInt(height) || null,
+    gender,
     role, 
     created_at: nowIso() 
   });
@@ -1295,33 +1306,68 @@ async function init() {
     await bootstrap(result.email, result.role);
   };
   
-  $("btnRegister").onclick = async () => {
-    const email = $("inpEmail").value.trim().toLowerCase();
-    const password = $("inpPass").value.trim();
-    const role = $("selRole").value;
+  $("btnRegister").onclick = () => {
+    $("registerModal").style.display = "block";
+    // Limpar campos
+    $("regName").value = "";
+    $("regEmail").value = "";
+    $("regPassword").value = "";
+    $("regAge").value = "";
+    $("regWeight").value = "";
+    $("regHeight").value = "";
+    $("regGender").value = "";
+    $("regRole").value = "student";
+    $("registerMsg").textContent = "";
+  };
+  
+  $("btnCloseRegisterModal").onclick = () => {
+    $("registerModal").style.display = "none";
+  };
+  
+  $("btnConfirmRegister").onclick = async () => {
+    const name = $("regName").value.trim();
+    const email = $("regEmail").value.trim().toLowerCase();
+    const password = $("regPassword").value.trim();
+    const age = $("regAge").value.trim();
+    const weight = $("regWeight").value.trim();
+    const height = $("regHeight").value.trim();
+    const gender = $("regGender").value;
+    const role = $("regRole").value;
+    
+    if (!name) {
+      $("registerMsg").textContent = "Informe seu nome completo.";
+      $("registerMsg").style.color = "var(--bad)";
+      return;
+    }
     
     if (!email) {
-      $("authMsg").textContent = "Informe um e-mail.";
-      $("authMsg").style.color = "var(--bad)";
+      $("registerMsg").textContent = "Informe um e-mail.";
+      $("registerMsg").style.color = "var(--bad)";
       return;
     }
     
     if (!password) {
-      $("authMsg").textContent = "Informe uma senha.";
-      $("authMsg").style.color = "var(--bad)";
+      $("registerMsg").textContent = "Informe uma senha.";
+      $("registerMsg").style.color = "var(--bad)";
       return;
     }
     
-    const result = await demoRegister(email, password, role);
+    if (!age || !weight || !height || !gender) {
+      $("registerMsg").textContent = "Preencha todos os campos.";
+      $("registerMsg").style.color = "var(--bad)";
+      return;
+    }
+    
+    const result = await demoRegister({ email, password, name, age, weight, height, gender, role });
     
     if (result.error) {
-      $("authMsg").textContent = result.error;
-      $("authMsg").style.color = "var(--bad)";
+      $("registerMsg").textContent = result.error;
+      $("registerMsg").style.color = "var(--bad)";
       return;
     }
     
+    $("registerModal").style.display = "none";
     showToast('Conta criada com sucesso!', 'success');
-    $("authMsg").textContent = "";
     await bootstrap(result.email, result.role);
   };
 
@@ -1388,6 +1434,9 @@ async function init() {
   });
   $("templateDaysModal").addEventListener("click",(e)=>{
     if (e.target === $("templateDaysModal")) closeTemplateDaysModal();
+  });
+  $("registerModal").addEventListener("click",(e)=>{
+    if (e.target === $("registerModal")) $("registerModal").style.display = "none";
   });
 }
 

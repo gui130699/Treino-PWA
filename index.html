@@ -413,6 +413,58 @@
   </div>
 </main>
 
+<!-- MODAL: REGISTER -->
+<div id="registerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);">
+  <div style="max-width:500px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
+    <div class="row" style="justify-content:space-between">
+      <strong style="font-size:18px">📝 Criar Nova Conta</strong>
+      <button class="secondary small" id="btnCloseRegisterModal">✕ Fechar</button>
+    </div>
+    <div class="divider"></div>
+    
+    <label>Nome completo</label>
+    <input id="regName" placeholder="Ex: João Silva" autocomplete="name">
+    
+    <label>E-mail</label>
+    <input id="regEmail" type="email" placeholder="seu@email.com" autocomplete="email">
+    
+    <label>Senha</label>
+    <input id="regPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+    
+    <label>Idade</label>
+    <input id="regAge" type="number" placeholder="Ex: 25" min="10" max="120">
+    
+    <div class="row" style="gap:10px">
+      <div style="flex:1">
+        <label>Peso (kg)</label>
+        <input id="regWeight" type="number" placeholder="Ex: 70" step="0.1" min="20" max="300">
+      </div>
+      <div style="flex:1">
+        <label>Altura (cm)</label>
+        <input id="regHeight" type="number" placeholder="Ex: 175" min="100" max="250">
+      </div>
+    </div>
+    
+    <label>Sexo</label>
+    <select id="regGender">
+      <option value="">Selecione</option>
+      <option value="masculino">Masculino</option>
+      <option value="feminino">Feminino</option>
+      <option value="outro">Outro/Prefiro não informar</option>
+    </select>
+    
+    <label>Tipo de conta</label>
+    <select id="regRole">
+      <option value="student">Aluno</option>
+      <option value="admin">Admin</option>
+    </select>
+    
+    <div style="height:10px"></div>
+    <button id="btnConfirmRegister" class="good">Criar Conta</button>
+    <div class="muted" id="registerMsg" style="margin-top:10px"></div>
+  </div>
+</div>
+
 <!-- MODAL REST -->
 <div id="restModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;">
   <div style="max-width:520px;margin:8vh auto;background:#111827;border:1px solid #374151;border-radius:16px;padding:14px">
