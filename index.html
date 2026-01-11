@@ -319,46 +319,16 @@
         <!-- TAB: TEMPLATES -->
         <section id="tab-templates" style="display:none">
           <h2>📋 Meus Treinos</h2>
-          <div class="muted">Crie treinos e adicione exercícios (com combos A1/A2 se quiser).</div>
+          <div class="muted">Crie treinos e adicione dias da semana com exercícios.</div>
           <div class="divider"></div>
 
           <div class="card" style="background:var(--bg)">
             <h3>➕ Novo treino</h3>
             <label>Nome do treino</label>
-            <input id="tplName" placeholder="Ex: Push A, Pull B, Pernas, etc.">
-            
-            <label>Dia da semana</label>
-            <select id="tplDay">
-              <option value="">Selecione o dia (opcional)</option>
-              <option value="Segunda-feira">Segunda-feira</option>
-              <option value="Terça-feira">Terça-feira</option>
-              <option value="Quarta-feira">Quarta-feira</option>
-              <option value="Quinta-feira">Quinta-feira</option>
-              <option value="Sexta-feira">Sexta-feira</option>
-              <option value="Sábado">Sábado</option>
-              <option value="Domingo">Domingo</option>
-            </select>
-            
-            <label>Grupos musculares (selecione múltiplos)</label>
-            <select id="tplGroups" multiple style="min-height:120px">
-              <option value="peito">Peito</option>
-              <option value="costas">Costas</option>
-              <option value="pernas">Pernas (geral)</option>
-              <option value="quadríceps">Quadríceps</option>
-              <option value="posteriores">Posteriores de coxa</option>
-              <option value="glúteos">Glúteos</option>
-              <option value="ombro">Ombros</option>
-              <option value="bíceps">Bíceps</option>
-              <option value="tríceps">Tríceps</option>
-              <option value="abdômen">Abdômen</option>
-              <option value="panturrilha">Panturrilha</option>
-              <option value="trapézio">Trapézio</option>
-              <option value="antebraço">Antebraço</option>
-            </select>
-            <div class="muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar múltiplos</div>
+            <input id="tplName" placeholder="Ex: Push Pull Legs, ABC, Full Body, etc.">
             
             <label>Observações do treino (opcional)</label>
-            <textarea id="tplNotes" placeholder="Ex: Foco em volume, treino rápido, etc."></textarea>
+            <textarea id="tplNotes" placeholder="Ex: Foco em hipertrofia, 4x por semana, etc."></textarea>
             <button id="btnCreateTemplate">Criar treino</button>
           </div>
 
@@ -458,6 +428,58 @@
     </div>
     <div style="height:10px"></div>
     <div class="muted">Se o app fechar, ao abrir ele recalcula quanto tempo passou.</div>
+  </div>
+</div>
+
+<!-- MODAL: MANAGE TEMPLATE DAYS -->
+<div id="templateDaysModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);">
+  <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
+    <div class="row" style="justify-content:space-between">
+      <strong id="templateDaysModalTitle" style="font-size:18px">Dias do Treino</strong>
+      <button class="secondary small" id="btnCloseTemplateDaysModal">✕ Fechar</button>
+    </div>
+    <div class="divider"></div>
+    
+    <!-- Add Day Form -->
+    <div class="card" style="background:var(--bg);margin-bottom:16px">
+      <h3>➕ Adicionar Dia</h3>
+      
+      <label>Dia da semana</label>
+      <select id="dayWeekday">
+        <option value="">Selecione o dia</option>
+        <option value="Segunda-feira">Segunda-feira</option>
+        <option value="Terça-feira">Terça-feira</option>
+        <option value="Quarta-feira">Quarta-feira</option>
+        <option value="Quinta-feira">Quinta-feira</option>
+        <option value="Sexta-feira">Sexta-feira</option>
+        <option value="Sábado">Sábado</option>
+        <option value="Domingo">Domingo</option>
+      </select>
+      
+      <label>Grupos musculares (selecione múltiplos)</label>
+      <select id="dayGroups" multiple style="min-height:120px">
+        <option value="peito">Peito</option>
+        <option value="costas">Costas</option>
+        <option value="pernas">Pernas (geral)</option>
+        <option value="quadríceps">Quadríceps</option>
+        <option value="posteriores">Posteriores de coxa</option>
+        <option value="glúteos">Glúteos</option>
+        <option value="ombros">Ombros</option>
+        <option value="bíceps">Bíceps</option>
+        <option value="tríceps">Tríceps</option>
+        <option value="abdômen">Abdômen</option>
+        <option value="panturrilha">Panturrilha</option>
+        <option value="trapézio">Trapézio</option>
+        <option value="antebraço">Antebraço</option>
+      </select>
+      <div class="muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar múltiplos</div>
+      
+      <button id="btnAddTemplateDay">Adicionar Dia</button>
+    </div>
+    
+    <!-- Days List -->
+    <h3>📅 Dias adicionados</h3>
+    <div id="templateDaysList" class="list"></div>
   </div>
 </div>
 

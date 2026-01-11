@@ -9,6 +9,10 @@ const toLb = (kg) => +(kg * KG_TO_LB).toFixed(2);
 const toKg = (lb) => +(lb / KG_TO_LB).toFixed(3);
 
 let CURRENT = { email: null, role: null, unit: "kg" };
+let ACTIVE_TEMPLATE_ID = null;
+let SELECTED_EXERCISE = null;
+let SELECTED_EXERCISES = [];
+let IS_COMBO_MODE = false;
 
 // Toast notification system
 function showToast(message, type = 'info') {
@@ -189,23 +193,25 @@ async function listTemplates() {
     wrap.className = "item";
     wrap.innerHTML = `
       <div style="flex:1">
-        <strong>${t.name}</strong>
-        <div class="meta">Label: ${t.day_label || "-"} • Grupos: ${(t.muscle_groups||[]).join(", ") || "-"}</div>
-        <div class="meta">${t.notes ? "Obs: " + escapeHtml(t.notes) : ""}</div>
+        <strong>${escapeHtml(t.name)}</strong>
+        <div class="meta">${escapeHtml(t.notes||"Sem descrição")}</div>
       </div>
-      <div class="row">
-        <button class="secondary small" data-act="items">Exercícios</button>
-        <button class="danger small" data-act="del">Excluir</button>
-      </div>
+      <button class="secondary small" data-act="days">📅 Dias</button>
+      <button class="danger small" data-act="del">Deletar</button>
     `;
     wrap.querySelector('[data-act="del"]').onclick = async () => {
       await DB.del("templates", t.id);
-      // delete items cascade not automatic in IDB, do manually:
-      const items = await DB.byIndex("template_items", "template_id", t.id);
-      for (const it of items) await DB.del("template_items", it.id);
+      // delete days and items cascade
+      const days = await DB.byIndex("template_days", "template_id", t.id);
+      for (const day of days) {
+        await DB.del("template_days", day.id);
+        const items = await DB.byIndex("template_items", "template_day_id", day.id);
+        for (const it of items) await DB.del("template_items", it.id);
+      }
       await listTemplates();
+      showToast('Treino deletado', 'success');
     };
-    wrap.querySelector('[data-act="items"]').onclick = () => openTemplateItems(t.id);
+    wrap.querySelector('[data-act="days"]').onclick = () => openTemplateDays(t.id);
     root.appendChild(wrap);
   }
 }
@@ -217,45 +223,133 @@ async function createTemplate() {
     return;
   }
   
-  const day = $("tplDay").value;
-  const groupsSelect = $("tplGroups");
-  const groups = Array.from(groupsSelect.selectedOptions).map(opt => opt.value);
   const notes = $("tplNotes").value.trim();
 
   await DB.put("templates", {
     id: uid(),
     owner_id: CURRENT.email,
     name,
-    day_label: day,
-    muscle_groups: groups,
     notes,
     created_at: nowIso()
   });
 
   $("tplName").value = "";
-  $("tplDay").value = "";
-  groupsSelect.selectedIndex = -1; // Deselect all
   $("tplNotes").value = "";
   
-  showToast('Treino criado com sucesso!', 'success');
+  showToast('Treino criado! Agora adicione os dias da semana.', 'success');
   await listTemplates();
 }
 
 let CURRENT_TEMPLATE_ID = null;
+let CURRENT_DAY_ID = null;
 let SELECTED_EXERCISE = null;
 let SELECTED_EXERCISES = []; // Para modo combo
 let IS_COMBO_MODE = false;
 
-async function openTemplateItems(templateId) {
+// ===== TEMPLATE DAYS =====
+async function openTemplateDays(templateId) {
   const t = await DB.get("templates", templateId);
   if (!t) return;
   
-  ACTIVE_TEMPLATE_ID = templateId;
+  CURRENT_TEMPLATE_ID = templateId;
+  $("templateDaysModalTitle").textContent = `Dias: ${t.name}`;
+  $("dayWeekday").value = "";
+  $("dayGroups").selectedIndex = -1;
+  
+  await loadTemplateDays();
+  $("templateDaysModal").style.display = "block";
+}
+
+function closeTemplateDaysModal() {
+  $("templateDaysModal").style.display = "none";
+  CURRENT_TEMPLATE_ID = null;
+}
+
+async function addTemplateDay() {
+  if (!CURRENT_TEMPLATE_ID) return;
+  
+  const weekday = $("dayWeekday").value;
+  if (!weekday) {
+    showToast("Selecione o dia da semana", "error");
+    return;
+  }
+  
+  const groupsSelect = $("dayGroups");
+  const groups = Array.from(groupsSelect.selectedOptions).map(opt => opt.value);
+  
+  if (!groups.length) {
+    showToast("Selecione pelo menos um grupo muscular", "error");
+    return;
+  }
+  
+  await DB.put("template_days", {
+    id: uid(),
+    template_id: CURRENT_TEMPLATE_ID,
+    weekday,
+    muscle_groups: groups,
+    order: Date.now(),
+    created_at: nowIso()
+  });
+  
+  $("dayWeekday").value = "";
+  groupsSelect.selectedIndex = -1;
+  
+  showToast(`Dia ${weekday} adicionado!`, "success");
+  await loadTemplateDays();
+}
+
+async function loadTemplateDays() {
+  if (!CURRENT_TEMPLATE_ID) return;
+  
+  const days = await DB.byIndex("template_days", "template_id", CURRENT_TEMPLATE_ID);
+  days.sort((a,b) => (a.order||0) - (b.order||0));
+  
+  const list = $("templateDaysList");
+  list.innerHTML = "";
+  
+  if (!days.length) {
+    list.innerHTML = "<div class='muted'>Nenhum dia adicionado ainda</div>";
+    return;
+  }
+  
+  for (const day of days) {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div style="flex:1">
+        <strong>${escapeHtml(day.weekday)}</strong>
+        <div class="meta">${escapeHtml(day.muscle_groups.join(", "))}</div>
+      </div>
+      <button class="primary small" data-act="items">Exercícios</button>
+      <button class="danger small" data-act="del">Remover</button>
+    `;
+    
+    div.querySelector('[data-act="del"]').onclick = async () => {
+      await DB.del("template_days", day.id);
+      const items = await DB.byIndex("template_items", "template_day_id", day.id);
+      for (const it of items) await DB.del("template_items", it.id);
+      showToast("Dia removido", "success");
+      await loadTemplateDays();
+    };
+    
+    div.querySelector('[data-act="items"]').onclick = () => openTemplateItems(day.id);
+    
+    list.appendChild(div);
+  }
+}
+
+// ===== TEMPLATE ITEMS =====
+async function openTemplateItems(dayId) {
+  const day = await DB.get("template_days", dayId);
+  if (!day) return;
+  
+  CURRENT_DAY_ID = dayId;
+  ACTIVE_TEMPLATE_ID = day.template_id;
   SELECTED_EXERCISE = null;
   SELECTED_EXERCISES = [];
   IS_COMBO_MODE = false;
   
-  $("templateModalTitle").textContent = `Exercícios: ${t.name}`;
+  $("templateModalTitle").textContent = `Exercícios: ${day.weekday} - ${day.muscle_groups.join(", ")}`;
   $("tmplExSearch").value = "";
   $("tmplSets").value = "3";
   $("tmplRepsMin").value = "8";
@@ -271,6 +365,12 @@ async function openTemplateItems(templateId) {
   await loadTemplateItems();
   searchExercisesForTemplate(); // Load all exercises on open
   $("templateModal").style.display = "block";
+}
+
+function closeTemplateModal() {
+  $("templateModal").style.display = "none";
+  ACTIVE_TEMPLATE_ID = null;
+  CURRENT_DAY_ID = null;
 }
 
 function toggleComboMode() {
@@ -303,8 +403,8 @@ async function addMultipleItems() {
     return;
   }
   
-  if (!ACTIVE_TEMPLATE_ID) {
-    showToast("Nenhum template selecionado", "error");
+  if (!CURRENT_DAY_ID) {
+    showToast("Nenhum dia selecionado", "error");
     return;
   }
   
@@ -313,8 +413,8 @@ async function addMultipleItems() {
   const comboGroup = Date.now(); // Same group for all
   
   try {
-    // Get current max order
-    const items = await DB.byIndex("template_items", "template_id", ACTIVE_TEMPLATE_ID);
+    // Get current max order for this day
+    const items = await DB.byIndex("template_items", "template_day_id", CURRENT_DAY_ID);
     let maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) : 0;
     
     // Add all selected exercises with incrementing combo_order
@@ -322,6 +422,7 @@ async function addMultipleItems() {
       const ex = SELECTED_EXERCISES[i];
       const newItem = {
         template_id: ACTIVE_TEMPLATE_ID,
+        template_day_id: CURRENT_DAY_ID,
         exercise_id: ex.id,
         order: ++maxOrder,
         sets: parseInt($("tmplSets").value) || 3,
@@ -447,22 +548,30 @@ function renderExerciseList(exercises, query) {
 }
 
 async function addTemplateItem() {
-  if (!SELECTED_EXERCISE || !ACTIVE_TEMPLATE_ID) return;
+  if (!SELECTED_EXERCISE || !CURRENT_DAY_ID) return;
   
   const customReps = $("tmplCustomReps").value.trim();
   const comboType = $("tmplComboType").value;
   
   try {
-    // Get current max order
-    const items = await DB.byIndex("template_items", "template_id", ACTIVE_TEMPLATE_ID);
+    // Get current max order for this day
+    const items = await DB.byIndex("template_items", "template_day_id", CURRENT_DAY_ID);
     let maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) : 0;
     
     const newItem = {
       template_id: ACTIVE_TEMPLATE_ID,
+      template_day_id: CURRENT_DAY_ID,
       exercise_id: SELECTED_EXERCISE.id,
       order: maxOrder + 1,
       sets: parseInt($("tmplSets").value) || 3,
       reps_min: parseInt($("tmplRepsMin").value) || 8,
+      reps_max: parseInt($("tmplRepsMax").value) || 12,
+      rest_seconds: parseInt($("tmplRest").value) || 60,
+      combo_type: comboType !== "none" ? comboType : null,
+      combo_group: null,
+      combo_order: null,
+      custom_reps: customReps || null
+    };
       reps_max: parseInt($("tmplRepsMax").value) || 12,
       rest_seconds: parseInt($("tmplRest").value) || 60,
       combo_type: comboType !== "none" ? comboType : null,
@@ -490,9 +599,9 @@ async function addTemplateItem() {
 }
 
 async function loadTemplateItems() {
-  if (!ACTIVE_TEMPLATE_ID) return;
+  if (!CURRENT_DAY_ID) return;
   
-  const items = await DB.byIndex("template_items", "template_id", ACTIVE_TEMPLATE_ID);
+  const items = await DB.byIndex("template_items", "template_day_id", CURRENT_DAY_ID);
   items.sort((a,b) => (a.order||0) - (b.order||0));
   
   const exMap = new Map((await DB.all("exercises")).map(e => [e.id, e]));
@@ -1138,6 +1247,17 @@ async function init() {
 
   $("btnCreateTemplate").onclick = createTemplate;
 
+  // template days modal
+  $("btnCloseTemplateDaysModal").onclick = closeTemplateDaysModal;
+  $("btnAddTemplateDay").onclick = addTemplateDay;
+
+  // template items modal
+  $("btnCloseTemplateModal").onclick = closeTemplateModal;
+  $("tmplExSearch").oninput = searchExercisesForTemplate;
+  $("btnAddTemplateItem").onclick = addTemplateItem;
+  $("btnAddMultipleItems").onclick = addMultipleItems;
+  $("tmplComboType").onchange = toggleComboMode;
+
   $("catalogSearch").oninput = () => renderCatalog(false);
   $("adminSearch").oninput = () => renderCatalog(true);
 
@@ -1160,13 +1280,6 @@ async function init() {
   };
   $("btnStopRest").onclick = stopRest;
 
-  // template items modal
-  $("btnCloseTemplateModal").onclick = closeTemplateModal;
-  $("tmplExSearch").oninput = searchExercisesForTemplate;
-  $("btnAddTemplateItem").onclick = addTemplateItem;
-  $("btnAddMultipleItems").onclick = addMultipleItems;
-  $("tmplComboType").onchange = toggleComboMode;
-
   wireTabs();
 
   // auto login if user exists
@@ -1180,6 +1293,9 @@ async function init() {
   });
   $("templateModal").addEventListener("click",(e)=>{
     if (e.target === $("templateModal")) closeTemplateModal();
+  });
+  $("templateDaysModal").addEventListener("click",(e)=>{
+    if (e.target === $("templateDaysModal")) closeTemplateDaysModal();
   });
 }
 

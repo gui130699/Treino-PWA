@@ -1,4 +1,4 @@
-const CACHE = "treino-pwa-v3";
+const CACHE = "treino-pwa-v4";
 const ASSETS = [
   "./",
   "./index.html",

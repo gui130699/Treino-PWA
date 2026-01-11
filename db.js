@@ -1,5 +1,5 @@
 const DB_NAME = "treino_pwa_db";
-const DB_VER = 1;
+const DB_VER = 2;
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -38,10 +38,17 @@ function openDB() {
         s.createIndex("owner_id", "owner_id", { unique: false });
       }
 
-      // template items
+      // template days (cada dia dentro de um template)
+      if (!db.objectStoreNames.contains("template_days")) {
+        const s = db.createObjectStore("template_days", { keyPath: "id" });
+        s.createIndex("template_id", "template_id", { unique: false });
+      }
+
+      // template items (agora vinculados a template_day_id)
       if (!db.objectStoreNames.contains("template_items")) {
         const s = db.createObjectStore("template_items", { keyPath: "id" });
         s.createIndex("template_id", "template_id", { unique: false });
+        s.createIndex("template_day_id", "template_day_id", { unique: false });
       }
 
       // sessions
