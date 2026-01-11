@@ -1,11 +1,12 @@
 const DB_NAME = "treino_pwa_db";
-const DB_VER = 2;
+const DB_VER = 3;
 
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = () => {
+    req.onupgradeneeded = (event) => {
       const db = req.result;
+      const oldVersion = event.oldVersion;
 
       // users (demo auth local)
       if (!db.objectStoreNames.contains("users")) {
@@ -49,6 +50,13 @@ function openDB() {
         const s = db.createObjectStore("template_items", { keyPath: "id" });
         s.createIndex("template_id", "template_id", { unique: false });
         s.createIndex("template_day_id", "template_day_id", { unique: false });
+      } else if (oldVersion < 3) {
+        // Migração: adicionar índice template_day_id se não existe
+        const tx = event.target.transaction;
+        const store = tx.objectStore("template_items");
+        if (!store.indexNames.contains("template_day_id")) {
+          store.createIndex("template_day_id", "template_day_id", { unique: false });
+        }
       }
 
       // sessions

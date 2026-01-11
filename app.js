@@ -404,16 +404,14 @@ async function openTemplateItems(dayId) {
   
   $("templateModalTitle").textContent = `Exercícios: ${day.weekday} - ${day.muscle_groups.join(", ")}`;
   $("tmplExSearch").value = "";
-  $("tmplSets").value = "3";
-  $("tmplRepsMin").value = "8";
-  $("tmplRepsMax").value = "12";
+  $("tmplTargetSets").value = "3";
+  $("tmplTargetReps").value = "8-12";
   $("tmplCustomReps").value = "";
-  $("tmplRest").value = "90";
-  $("tmplComboType").value = "none";
+  $("tmplRestSec").value = "90";
+  $("tmplComboType").value = "";
   $("btnAddTemplateItem").disabled = true;
   $("btnAddMultipleItems").style.display = "none";
   $("btnAddMultipleItems").disabled = true;
-  $("comboModeHint").style.display = "none";
   
   await loadTemplateItems();
   searchExercisesForTemplate(); // Load all exercises on open
@@ -598,26 +596,30 @@ async function addTemplateItem() {
   if (!SELECTED_EXERCISE || !CURRENT_DAY_ID) return;
   
   const customReps = $("tmplCustomReps").value.trim();
-  const comboType = $("tmplComboType").value;
+  const comboType = $("tmplComboType").value.trim();
   
   try {
     // Get current max order for this day
     const items = await DB.byIndex("template_items", "template_day_id", CURRENT_DAY_ID);
     let maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) : 0;
     
+    // Parse target sets and reps
+    const targetSets = parseInt($("tmplTargetSets").value) || 3;
+    const targetReps = $("tmplTargetReps").value.trim() || "8-12";
+    const restSeconds = parseInt($("tmplRestSec").value) || 90;
+    
     const newItem = {
       template_id: ACTIVE_TEMPLATE_ID,
       template_day_id: CURRENT_DAY_ID,
       exercise_id: SELECTED_EXERCISE.id,
       order: maxOrder + 1,
-      sets: parseInt($("tmplSets").value) || 3,
-      reps_min: parseInt($("tmplRepsMin").value) || 8,
-      reps_max: parseInt($("tmplRepsMax").value) || 12,
-      rest_seconds: parseInt($("tmplRest").value) || 60,
-      combo_type: comboType !== "none" ? comboType : null,
+      target_sets: targetSets,
+      target_reps: targetReps,
+      custom_reps: customReps || null,
+      rest_seconds: restSeconds,
+      combo_type: comboType || null,
       combo_group: null,
-      combo_order: null,
-      custom_reps: customReps || null
+      combo_order: null
     };
     
     await DB.put("template_items", newItem);
@@ -657,15 +659,15 @@ async function loadTemplateItems() {
     const ex = exMap.get(it.exercise_id);
     if (!ex) continue;
     
-    const repsDisplay = it.custom_reps || `${it.reps_min}-${it.reps_max}`;
-    const comboInfo = it.combo_type && it.combo_type !== "none" ? ` • ${it.combo_type}` : "";
+    const repsDisplay = it.custom_reps || it.target_reps || "-";
+    const comboInfo = it.combo_type ? ` • ${it.combo_type}` : "";
     
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
       <div style="flex:1">
         <strong>${escapeHtml(ex.name)}</strong>
-        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${it.sets}x${repsDisplay} • ${it.rest_seconds}s${comboInfo}</div>
+        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${it.target_sets}x${repsDisplay} • ${it.rest_seconds}s${comboInfo}</div>
       </div>
       <button class="danger small" data-del="${it.id}">Remover</button>
     `;
