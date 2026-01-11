@@ -324,8 +324,10 @@ async function addTemplateDay() {
     return;
   }
   
-  const groupsSelect = $("dayGroups");
-  const groups = Array.from(groupsSelect.selectedOptions).map(opt => opt.value);
+  // Pegar checkboxes marcados
+  const groupsContainer = $("dayGroups");
+  const checkboxes = groupsContainer.querySelectorAll('input[type="checkbox"]:checked');
+  const groups = Array.from(checkboxes).map(cb => cb.value);
   
   if (!groups.length) {
     showToast("Selecione pelo menos um grupo muscular", "error");
@@ -342,7 +344,8 @@ async function addTemplateDay() {
   });
   
   $("dayWeekday").value = "";
-  groupsSelect.selectedIndex = -1;
+  // Desmarcar todos os checkboxes
+  checkboxes.forEach(cb => cb.checked = false);
   
   showToast(`Dia ${weekday} adicionado!`, "success");
   await loadTemplateDays();

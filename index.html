@@ -518,22 +518,47 @@
       </select>
       
       <label>Grupos musculares (selecione múltiplos)</label>
-      <select id="dayGroups" multiple style="min-height:120px">
-        <option value="peito">Peito</option>
-        <option value="costas">Costas</option>
-        <option value="pernas">Pernas (geral)</option>
-        <option value="quadríceps">Quadríceps</option>
-        <option value="posteriores">Posteriores de coxa</option>
-        <option value="glúteos">Glúteos</option>
-        <option value="ombros">Ombros</option>
-        <option value="bíceps">Bíceps</option>
-        <option value="tríceps">Tríceps</option>
-        <option value="abdômen">Abdômen</option>
-        <option value="panturrilha">Panturrilha</option>
-        <option value="trapézio">Trapézio</option>
-        <option value="antebraço">Antebraço</option>
-      </select>
-      <div class="muted">Segure Ctrl (Windows) ou Cmd (Mac) para selecionar múltiplos</div>
+      <div id="dayGroups" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;background:var(--bg);border-radius:8px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="peito"> Peito
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="costas"> Costas
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="pernas"> Pernas (geral)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="quadríceps"> Quadríceps
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="posteriores"> Posteriores
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="glúteos"> Glúteos
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="ombros"> Ombros
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="bíceps"> Bíceps
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="tríceps"> Tríceps
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="abdômen"> Abdômen
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="panturrilha"> Panturrilha
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="trapézio"> Trapézio
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+          <input type="checkbox" value="antebraço"> Antebraço
+        </label>
+      </div>
       
       <button id="btnAddTemplateDay">Adicionar Dia</button>
     </div>
