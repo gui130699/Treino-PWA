@@ -243,7 +243,16 @@
           <option value="student">Aluno</option>
           <option value="admin">Admin</option>
         </select>
-        <button id="btnLogin">Entrar / Criar usuário</button>
+        
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+          <input type="checkbox" id="chkRememberMe" checked>
+          <label for="chkRememberMe" style="margin:0;cursor:pointer">Lembrar meus dados</label>
+        </div>
+        
+        <div class="row" style="gap:10px">
+          <button id="btnLogin" style="flex:1">Entrar</button>
+          <button id="btnRegister" class="secondary" style="flex:1">Criar Conta</button>
+        </div>
         <div class="muted" id="authMsg"></div>
       </div>
 

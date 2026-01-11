@@ -42,17 +42,59 @@ window.addEventListener("online", netUpdate);
 window.addEventListener("offline", netUpdate);
 
 // ---------- DEMO AUTH ----------
-async function demoLogin(email, role) {
+async function demoLogin(email, password, rememberMe = true) {
   const existing = await DB.get("users", email);
+  
   if (!existing) {
-    await DB.put("users", { email, role, created_at: nowIso() });
+    return { error: "Usuário não encontrado. Clique em 'Criar Conta' primeiro." };
   }
+  
+  // Validar senha
+  if (existing.password !== password) {
+    return { error: "Senha incorreta" };
+  }
+  
+  // Salvar sessão
+  if (rememberMe) {
+    await DB.put("runtime", { key: "current_user", value: { email, role: existing.role } });
+    await DB.put("runtime", { key: "remember_me", value: true });
+  } else {
+    await DB.put("runtime", { key: "current_user", value: { email, role: existing.role } });
+    await DB.put("runtime", { key: "remember_me", value: false });
+  }
+  
+  return { email, role: existing.role };
+}
+
+async function demoRegister(email, password, role) {
+  const existing = await DB.get("users", email);
+  
+  if (existing) {
+    return { error: "Usuário já existe. Use 'Entrar' para fazer login." };
+  }
+  
+  // Criar novo usuário
+  await DB.put("users", { 
+    email, 
+    password, 
+    role, 
+    created_at: nowIso() 
+  });
+  
+  // Auto login após registro
   await DB.put("runtime", { key: "current_user", value: { email, role } });
-  return { email, role: (existing?.role || role) };
+  await DB.put("runtime", { key: "remember_me", value: true });
+  
+  return { email, role };
 }
+
 async function demoLogout() {
-  await DB.put("runtime", { key: "current_user", value: null });
+  const rememberMe = await DB.get("runtime", "remember_me");
+  if (!rememberMe?.value) {
+    await DB.put("runtime", { key: "current_user", value: null });
+  }
 }
+
 async function getCurrentUser() {
   const r = await DB.get("runtime", "current_user");
   return r?.value || null;
@@ -1226,11 +1268,61 @@ async function init() {
   // events
   $("btnLogin").onclick = async () => {
     const email = $("inpEmail").value.trim().toLowerCase();
-    const role = $("selRole").value;
-    if (!email) return $("authMsg").textContent = "Informe um e-mail.";
-    const u = await demoLogin(email, role);
+    const password = $("inpPass").value.trim();
+    const rememberMe = $("chkRememberMe").checked;
+    
+    if (!email) {
+      $("authMsg").textContent = "Informe um e-mail.";
+      $("authMsg").style.color = "var(--bad)";
+      return;
+    }
+    
+    if (!password) {
+      $("authMsg").textContent = "Informe uma senha.";
+      $("authMsg").style.color = "var(--bad)";
+      return;
+    }
+    
+    const result = await demoLogin(email, password, rememberMe);
+    
+    if (result.error) {
+      $("authMsg").textContent = result.error;
+      $("authMsg").style.color = "var(--bad)";
+      return;
+    }
+    
     $("authMsg").textContent = "";
-    await bootstrap(u.email, u.role);
+    await bootstrap(result.email, result.role);
+  };
+  
+  $("btnRegister").onclick = async () => {
+    const email = $("inpEmail").value.trim().toLowerCase();
+    const password = $("inpPass").value.trim();
+    const role = $("selRole").value;
+    
+    if (!email) {
+      $("authMsg").textContent = "Informe um e-mail.";
+      $("authMsg").style.color = "var(--bad)";
+      return;
+    }
+    
+    if (!password) {
+      $("authMsg").textContent = "Informe uma senha.";
+      $("authMsg").style.color = "var(--bad)";
+      return;
+    }
+    
+    const result = await demoRegister(email, password, role);
+    
+    if (result.error) {
+      $("authMsg").textContent = result.error;
+      $("authMsg").style.color = "var(--bad)";
+      return;
+    }
+    
+    showToast('Conta criada com sucesso!', 'success');
+    $("authMsg").textContent = "";
+    await bootstrap(result.email, result.role);
   };
 
   $("btnLogout").onclick = async () => {
