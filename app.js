@@ -647,6 +647,55 @@ async function addTemplateItem() {
   }
 }
 
+async function editTemplateItem(group) {
+  try {
+    const firstItem = group[0];
+    const isCombo = group.length > 1;
+    
+    // Preencher os campos com os valores atuais
+    $("tmplTargetSets").value = firstItem.target_sets || 3;
+    $("tmplTargetReps").value = firstItem.target_reps || "8-12";
+    $("tmplCustomReps").value = firstItem.custom_reps || "";
+    $("tmplRestSec").value = firstItem.rest_seconds || 90;
+    $("tmplComboType").value = firstItem.combo_type || "";
+    
+    // Criar modal de edição
+    const exMap = new Map((await DB.all("exercises")).map(e => [e.id, e]));
+    const exerciseNames = group.map(it => {
+      const ex = exMap.get(it.exercise_id);
+      return ex ? ex.name : "?";
+    }).join(" + ");
+    
+    const confirmed = confirm(`Editar: ${exerciseNames}\n\nOs valores atuais foram carregados nos campos acima. Ajuste-os e clique em OK para salvar.`);
+    
+    if (!confirmed) return;
+    
+    // Atualizar todos os itens do grupo
+    const targetSets = parseInt($("tmplTargetSets").value) || 3;
+    const targetReps = $("tmplTargetReps").value.trim() || "8-12";
+    const customReps = $("tmplCustomReps").value.trim() || null;
+    const restSeconds = parseInt($("tmplRestSec").value) || 90;
+    const comboType = $("tmplComboType").value.trim() || null;
+    
+    for (const it of group) {
+      it.target_sets = targetSets;
+      it.target_reps = targetReps;
+      it.custom_reps = customReps;
+      it.rest_seconds = restSeconds;
+      it.combo_type = comboType;
+      
+      await DB.put("template_items", it);
+    }
+    
+    showToast("Exercício atualizado!", "success");
+    await loadTemplateItems();
+    
+  } catch (err) {
+    console.error("Erro ao editar exercício:", err);
+    showToast("Erro ao editar exercício", "error");
+  }
+}
+
 async function loadTemplateItems() {
   if (!CURRENT_DAY_ID) return;
   
@@ -702,8 +751,15 @@ async function loadTemplateItems() {
         <strong>${escapeHtml(exerciseNames)}</strong>
         <div class="meta">${firstItem.target_sets}x${repsDisplay} • ${firstItem.rest_seconds}s${comboInfo}</div>
       </div>
-      <button class="danger small" data-del-group>Remover</button>
+      <div class="row" style="gap:8px">
+        <button class="secondary small" data-edit-group>✏️ Editar</button>
+        <button class="danger small" data-del-group>🗑️ Remover</button>
+      </div>
     `;
+    
+    div.querySelector(`[data-edit-group]`).onclick = async () => {
+      await editTemplateItem(group);
+    };
     
     div.querySelector(`[data-del-group]`).onclick = async () => {
       for (const it of group) {

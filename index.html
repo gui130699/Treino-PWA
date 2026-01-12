@@ -414,7 +414,7 @@
 </main>
 
 <!-- MODAL: REGISTER -->
-<div id="registerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);">
+<div id="registerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='registerModal') $('registerModal').style.display='none'">
   <div style="max-width:500px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
     <div class="row" style="justify-content:space-between">
       <strong style="font-size:18px">📝 Criar Nova Conta</strong>
@@ -466,11 +466,11 @@
 </div>
 
 <!-- MODAL REST -->
-<div id="restModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;">
+<div id="restModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;" onclick="if(event.target.id==='restModal') closeRestModal()">
   <div style="max-width:520px;margin:8vh auto;background:#111827;border:1px solid #374151;border-radius:16px;padding:14px">
     <div class="row" style="justify-content:space-between">
       <strong>Descanso</strong>
-      <button class="secondary small" id="btnCloseRest">Fechar</button>
+      <button class="secondary small" id="btnCloseRest">✕ Fechar</button>
     </div>
     <div class="divider"></div>
     <div style="font-size:44px;font-weight:900" id="restClock">00:00</div>
@@ -493,7 +493,7 @@
 </div>
 
 <!-- MODAL: MANAGE TEMPLATE DAYS -->
-<div id="templateDaysModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);">
+<div id="templateDaysModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateDaysModal') closeTemplateDaysModal()">
   <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
     <div class="row" style="justify-content:space-between">
       <strong id="templateDaysModalTitle" style="font-size:18px">Dias do Treino</strong>
@@ -570,7 +570,7 @@
 </div>
 
 <!-- MODAL TEMPLATE ITEMS -->
-<div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);">
+<div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateModal') closeTemplateModal()">
   <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
     <div class="row" style="justify-content:space-between">
       <strong id="templateModalTitle" style="font-size:18px">Exercícios do Treino</strong>
@@ -642,7 +642,8 @@
 </div>
 
 <!-- MODAL ASSISTENTE DE SÉRIES -->
-<div id="customRepsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);">
+<!-- MODAL ASSISTENTE DE SÉRIES -->
+<div id="customRepsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='customRepsModal') closeCustomRepsHelper()">
   <div style="max-width:500px;margin:10vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow-lg)">
     <div class="row" style="justify-content:space-between;margin-bottom:16px">
       <strong style="font-size:18px">📝 Assistente de Séries Personalizadas</strong>
