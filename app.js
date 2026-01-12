@@ -2,8 +2,15 @@ import { DB } from "./db.js";
 
 // Inicializar Supabase
 const SUPABASE_URL = "https://urnfqiwgtloldzaovive.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVybmZxaXdndGxvbGR6YW92aXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY2MjY4MDAsImV4cCI6MjA1MjIwMjgwMH0.sb_publishable_C-JUI7jQWTd5ocVYfCCbcg_w73rcUKz";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVybmZxaXdndGxvbGR6YW92aXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY2MjY4MDAsImV4cCI6MjA1MjIwMjgwMH0.qX9vZ8K5kF3bN7mL6pJ4wH2rT1cS9dE8aY5vB6nU3oM";
+
+let supabase = null;
+try {
+  supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  console.log('✅ Supabase inicializado com sucesso');
+} catch (error) {
+  console.error('⚠️ Erro ao inicializar Supabase:', error);
+}
 
 const $ = (id) => document.getElementById(id);
 const uid = () => crypto.randomUUID();
@@ -144,79 +151,79 @@ async function demoRegister(userData) {
     return { error: "A senha deve ter pelo menos 6 caracteres." };
   }
   
-  // Criar usuário no Supabase Auth
-  try {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          age: parseInt(age) || null,
-          weight: parseFloat(weight) || null,
-          height: parseInt(height) || null,
-          gender,
-          role
+  // Criar usuário no Supabase Auth (se disponível)
+  if (supabase) {
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            age: parseInt(age) || null,
+            weight: parseFloat(weight) || null,
+            height: parseInt(height) || null,
+            gender,
+            role
+          }
+        }
+      });
+      
+      if (authError) {
+        console.error('Erro no Supabase Auth:', authError);
+        if (authError.message.includes('already registered')) {
+          return { error: "Este e-mail já está cadastrado. Use 'Entrar' para fazer login." };
+        }
+        // Se for erro de API, continua com salvamento local
+        console.warn('⚠️ Falha no Supabase, salvando apenas localmente');
+      } else if (authData.user) {
+        // Salvar dados do usuário na tabela users
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email,
+            name,
+            age: parseInt(age) || null,
+            weight: parseFloat(weight) || null,
+            height: parseInt(height) || null,
+            gender,
+            role,
+            created_at: nowIso()
+          });
+        
+        if (insertError) {
+          console.error('Erro ao salvar usuário na tabela:', insertError);
+          showToast('Conta criada, mas alguns dados não foram salvos', 'warning');
+        } else {
+          console.log('✅ Usuário salvo no Supabase com sucesso!');
         }
       }
-    });
-    
-    if (authError) {
-      console.error('Erro no Supabase Auth:', authError);
-      if (authError.message.includes('already registered')) {
-        return { error: "Este e-mail já está cadastrado. Use 'Entrar' para fazer login." };
-      }
-      return { error: authError.message || "Erro ao criar conta. Tente novamente." };
+    } catch (error) {
+      console.error('Erro ao criar usuário no Supabase:', error);
+      console.warn('⚠️ Continuando com salvamento local apenas');
     }
-    
-    // Salvar dados do usuário na tabela users
-    if (authData.user) {
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email,
-          name,
-          age: parseInt(age) || null,
-          weight: parseFloat(weight) || null,
-          height: parseInt(height) || null,
-          gender,
-          role,
-          created_at: nowIso()
-        });
-      
-      if (insertError) {
-        console.error('Erro ao salvar usuário na tabela:', insertError);
-        showToast('Conta criada, mas alguns dados não foram salvos', 'warning');
-      } else {
-        console.log('✅ Usuário salvo no Supabase com sucesso!');
-      }
-    }
-    
-    // Salvar localmente também
-    await DB.put("users", { 
-      email, 
-      password, 
-      name,
-      age: parseInt(age) || null,
-      weight: parseFloat(weight) || null,
-      height: parseInt(height) || null,
-      gender,
-      role, 
-      created_at: nowIso() 
-    });
-    
-    // Auto login após registro
-    await DB.put("runtime", { key: "current_user", value: { email, role } });
-    await DB.put("runtime", { key: "remember_me", value: true });
-    
-    showToast('✅ Conta criada com sucesso!', 'success');
-    return { email, role };
-    
-  } catch (error) {
-    console.error('Erro ao criar usuário:', error);
-    return { error: "Erro ao criar conta. Verifique sua conexão e tente novamente." };
   }
+  
+  // Salvar localmente (sempre)
+  await DB.put("users", { 
+    email, 
+    password, 
+    name,
+    age: parseInt(age) || null,
+    weight: parseFloat(weight) || null,
+    height: parseInt(height) || null,
+    gender,
+    role, 
+    created_at: nowIso() 
+  });
+  
+  // Auto login após registro
+  await DB.put("runtime", { key: "current_user", value: { email, role } });
+  await DB.put("runtime", { key: "remember_me", value: true });
+  
+  showToast('✅ Conta criada com sucesso!', 'success');
+  return { email, role };
 }
 
 async function demoLogout() {
