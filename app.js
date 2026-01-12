@@ -27,8 +27,41 @@ function showToast(message, type = 'info') {
 }
 
 // ---------- PWA ----------
+let deferredPrompt = null;
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(console.error);
+}
+
+// Capturar evento de instalação
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $("btnInstallApp").style.display = "inline-block";
+});
+
+// Verificar se já está instalado
+window.addEventListener('appinstalled', () => {
+  $("btnInstallApp").style.display = "none";
+  deferredPrompt = null;
+  showToast('App instalado com sucesso! 🎉', 'success');
+});
+
+async function installApp() {
+  if (!deferredPrompt) {
+    showToast('App já está instalado ou não disponível para instalação', 'info');
+    return;
+  }
+  
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  
+  if (outcome === 'accepted') {
+    showToast('Instalação iniciada...', 'success');
+  }
+  
+  deferredPrompt = null;
+  $("btnInstallApp").style.display = "none";
 }
 
 function netUpdate() {
@@ -1740,6 +1773,8 @@ async function init() {
     showToast('Conta criada com sucesso!', 'success');
     await bootstrap(result.email, result.role);
   };
+
+  $("btnInstallApp").onclick = installApp;
 
   $("btnLogout").onclick = async () => {
     await demoLogout();
