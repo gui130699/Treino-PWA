@@ -35,33 +35,66 @@ if ("serviceWorker" in navigator) {
 
 // Capturar evento de instalação
 window.addEventListener('beforeinstallprompt', (e) => {
+  console.log('beforeinstallprompt capturado');
   e.preventDefault();
   deferredPrompt = e;
-  $("btnInstallApp").style.display = "inline-block";
+  const btn = $("btnInstallApp");
+  if (btn) btn.style.display = "inline-flex";
 });
 
 // Verificar se já está instalado
 window.addEventListener('appinstalled', () => {
-  $("btnInstallApp").style.display = "none";
+  const btn = $("btnInstallApp");
+  if (btn) btn.style.display = "none";
   deferredPrompt = null;
   showToast('App instalado com sucesso! 🎉', 'success');
 });
 
+// Verificar se está em modo standalone
+function isAppInstalled() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+}
+
 async function installApp() {
-  if (!deferredPrompt) {
-    showToast('App já está instalado ou não disponível para instalação', 'info');
+  console.log('installApp chamado');
+  
+  // Verificar se já está instalado
+  if (isAppInstalled()) {
+    showToast('App já está instalado!', 'info');
+    const btn = $("btnInstallApp");
+    if (btn) btn.style.display = "none";
     return;
   }
   
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  
-  if (outcome === 'accepted') {
-    showToast('Instalação iniciada...', 'success');
+  // Verificar se o prompt está disponível
+  if (!deferredPrompt) {
+    showToast('Instalação não disponível neste navegador', 'error');
+    return;
   }
   
-  deferredPrompt = null;
-  $("btnInstallApp").style.display = "none";
+  try {
+    // Mostrar o prompt
+    await deferredPrompt.prompt();
+    
+    // Aguardar escolha do usuário
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('Resultado da instalação:', outcome);
+    
+    if (outcome === 'accepted') {
+      showToast('Instalação iniciada! 🎉', 'success');
+    } else {
+      showToast('Instalação cancelada', 'info');
+    }
+    
+    // Limpar o prompt
+    deferredPrompt = null;
+    const btn = $("btnInstallApp");
+    if (btn) btn.style.display = "none";
+  } catch (err) {
+    console.error('Erro ao instalar:', err);
+    showToast('Erro ao instalar o app', 'error');
+  }
 }
 
 function netUpdate() {
