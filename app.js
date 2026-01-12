@@ -662,26 +662,54 @@ async function loadTemplateItems() {
     return;
   }
   
+  // Agrupar exercícios de combo
+  const groups = [];
+  const processed = new Set();
+  
   for (const it of items) {
-    const ex = exMap.get(it.exercise_id);
-    if (!ex) continue;
+    if (processed.has(it.id)) continue;
     
-    const repsDisplay = it.custom_reps || it.target_reps || "-";
-    const comboInfo = it.combo_type ? ` • ${it.combo_type}` : "";
+    if (it.combo_group) {
+      // Buscar todos os exercícios do mesmo combo_group
+      const comboItems = items.filter(i => i.combo_group === it.combo_group);
+      comboItems.sort((a,b) => (a.combo_order||0) - (b.combo_order||0));
+      groups.push(comboItems);
+      comboItems.forEach(i => processed.add(i.id));
+    } else {
+      groups.push([it]);
+      processed.add(it.id);
+    }
+  }
+  
+  // Renderizar grupos
+  for (const group of groups) {
+    const isCombo = group.length > 1;
+    const firstItem = group[0];
+    
+    // Montar nomes dos exercícios
+    const exerciseNames = group.map(it => {
+      const ex = exMap.get(it.exercise_id);
+      return ex ? ex.name : "?";
+    }).join(" + ");
+    
+    const repsDisplay = firstItem.custom_reps || firstItem.target_reps || "-";
+    const comboInfo = firstItem.combo_type ? ` • ${firstItem.combo_type}` : "";
     
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
       <div style="flex:1">
-        <strong>${escapeHtml(ex.name)}</strong>
-        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${it.target_sets}x${repsDisplay} • ${it.rest_seconds}s${comboInfo}</div>
+        <strong>${escapeHtml(exerciseNames)}</strong>
+        <div class="meta">${firstItem.target_sets}x${repsDisplay} • ${firstItem.rest_seconds}s${comboInfo}</div>
       </div>
-      <button class="danger small" data-del="${it.id}">Remover</button>
+      <button class="danger small" data-del-group>Remover</button>
     `;
     
-    div.querySelector(`[data-del="${it.id}"]`).onclick = async () => {
-      await DB.del("template_items", it.id);
-      showToast("Exercício removido", "success");
+    div.querySelector(`[data-del-group]`).onclick = async () => {
+      for (const it of group) {
+        await DB.del("template_items", it.id);
+      }
+      showToast(isCombo ? "Combo removido" : "Exercício removido", "success");
       await loadTemplateItems();
     };
     
@@ -995,100 +1023,150 @@ async function renderTrainUI() {
 
   // render exercises from template items
   const items = await DB.byIndex("template_items","template_id", live.template_id);
-  items.sort((a,b)=> (a.sort_order||0)-(b.sort_order||0));
+  items.sort((a,b)=> (a.order||0)-(b.order||0));
   const exMap = new Map((await DB.all("exercises")).map(e=>[e.id,e]));
   const setsAll = (await DB.byIndex("session_sets","session_id", live.id));
 
   const root = $("liveExercises");
   root.innerHTML = "";
 
+  // Agrupar exercícios de combo
+  const groups = [];
+  const processed = new Set();
+  
   for (const it of items) {
-    const ex = exMap.get(it.exercise_id);
+    if (processed.has(it.id)) continue;
+    
+    if (it.combo_group) {
+      const comboItems = items.filter(i => i.combo_group === it.combo_group);
+      comboItems.sort((a,b) => (a.combo_order||0) - (b.combo_order||0));
+      groups.push(comboItems);
+      comboItems.forEach(i => processed.add(i.id));
+    } else {
+      groups.push([it]);
+      processed.add(it.id);
+    }
+  }
+
+  // Renderizar grupos
+  for (const group of groups) {
+    const isCombo = group.length > 1;
+    const firstItem = group[0];
+    
+    // Montar nomes dos exercícios
+    const exerciseNames = group.map(it => {
+      const ex = exMap.get(it.exercise_id);
+      return ex ? ex.name : "?";
+    }).join(" + ");
+    
+    // Para combos, mostrar informações do primeiro exercício como referência
+    const ex = exMap.get(firstItem.exercise_id);
     if (!ex) continue;
 
-    const sets = setsAll.filter(s => s.exercise_id === ex.id).sort((a,b)=>a.set_index-b.set_index);
+    // Buscar sets de todos os exercícios do combo
+    const allExIds = group.map(it => it.exercise_id);
+    const sets = setsAll.filter(s => allExIds.includes(s.exercise_id)).sort((a,b)=>a.set_index-b.set_index);
+    
     const lastLine = sets.length
       ? `Último set: ${formatWeightForUI(sets[sets.length-1].weight_kg)} x ${sets[sets.length-1].reps || "-"}`
       : "Sem sets ainda";
 
-    const combo = it.combo_type ? `${it.combo_group}${it.combo_order} ${it.combo_type}` : "";
-    const target = `${it.target_sets||"-"}x${it.target_reps||"-"} • ${it.rest_seconds||90}s`;
+    const combo = firstItem.combo_type ? `${firstItem.combo_type}` : "";
+    const target = `${firstItem.target_sets||"-"}x${firstItem.target_reps||"-"} • ${firstItem.rest_seconds||90}s`;
 
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
       <div style="flex:1">
-        <strong>${escapeHtml(ex.name)}</strong>
-        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${escapeHtml(ex.equipment)} • ${escapeHtml(ex.type)} ${combo ? " • " + combo : ""}</div>
+        <strong>${escapeHtml(exerciseNames)}</strong>
+        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${escapeHtml(ex.equipment)} ${combo ? " • " + combo : ""}</div>
         <div class="meta">Alvo: ${escapeHtml(target)}</div>
         <div class="meta">${escapeHtml(lastLine)}</div>
 
         <div class="divider"></div>
 
-        <div class="row" style="gap:8px">
-          <input style="width:130px" data-w placeholder="Peso (${CURRENT.unit})">
-          <input style="width:110px" data-r placeholder="Reps">
-          <button class="small good" data-add>+ Set</button>
-          <button class="small secondary" data-rest>Descansar</button>
-        </div>
+        ${group.map((it, idx) => {
+          const itemEx = exMap.get(it.exercise_id);
+          const itemSets = setsAll.filter(s => s.exercise_id === it.exercise_id).sort((a,b)=>a.set_index-b.set_index);
+          
+          return `
+            <div style="margin-bottom: 12px; ${idx > 0 ? 'border-top: 1px solid var(--border); padding-top: 12px;' : ''}">
+              ${isCombo ? `<div class="meta" style="margin-bottom: 4px;"><strong>${escapeHtml(itemEx?.name || "?")}</strong></div>` : ''}
+              <div class="row" style="gap:8px">
+                <input style="width:130px" data-w-${it.exercise_id} placeholder="Peso (${CURRENT.unit})">
+                <input style="width:110px" data-r-${it.exercise_id} placeholder="Reps">
+                <button class="small good" data-add-${it.exercise_id}>+ Set</button>
+              </div>
+              <div class="muted" style="margin-top:4px">${itemSets.map(s => `Set ${s.set_index}: ${formatWeightForUI(s.weight_kg)} x ${s.reps||"-"}`).join(" • ")}</div>
+            </div>
+          `;
+        }).join('')}
 
-        <div class="muted" style="margin-top:8px">${sets.map(s => `Set ${s.set_index}: ${formatWeightForUI(s.weight_kg)} x ${s.reps||"-"}`).join(" • ")}</div>
+        <div class="row" style="gap:8px; margin-top: 8px;">
+          <button class="small secondary" data-rest>Descansar ${firstItem.rest_seconds||90}s</button>
+        </div>
       </div>
     `;
 
-    const inpW = div.querySelector("[data-w]");
-    const inpR = div.querySelector("[data-r]");
-    const btnAdd = div.querySelector("[data-add]");
+    // Adicionar event listeners para cada exercício do grupo
+    for (const it of group) {
+      const itemEx = exMap.get(it.exercise_id);
+      if (!itemEx) continue;
+      
+      const inpW = div.querySelector(`[data-w-${it.exercise_id}]`);
+      const inpR = div.querySelector(`[data-r-${it.exercise_id}]`);
+      const btnAdd = div.querySelector(`[data-add-${it.exercise_id}]`);
+
+      if (!btnAdd) continue;
+
+      btnAdd.onclick = async () => {
+        const wTxt = (inpW.value||"").trim().replace(",",".");
+        const rTxt = (inpR.value||"").trim();
+        if (!wTxt) {
+          showToast('Informe o peso', 'error');
+          return;
+        }
+        const reps = rTxt ? parseInt(rTxt,10) : null;
+        if (rTxt && isNaN(reps)) {
+          showToast('Reps inválidas', 'error');
+          return;
+        }
+
+        const weightUI = parseFloat(wTxt);
+        if (isNaN(weightUI) || weightUI <= 0) {
+          showToast('Peso inválido', 'error');
+          return;
+        }
+
+        const weightKg = (CURRENT.unit === "kg") ? weightUI : toKg(weightUI);
+
+        const itemSets = setsAll.filter(s => s.exercise_id === it.exercise_id).sort((a,b)=>a.set_index-b.set_index);
+        const nextIndex = (itemSets.length ? Math.max(...itemSets.map(s=>s.set_index)) : 0) + 1;
+
+        await DB.put("session_sets", {
+          id: uid(),
+          session_id: live.id,
+          exercise_id: it.exercise_id,
+          set_index: nextIndex,
+          reps: reps,
+          weight_kg: weightKg,
+          rir: null,
+          rpe: null,
+          notes: "",
+          created_at: nowIso()
+        });
+
+        inpW.value = "";
+        inpR.value = "";
+
+        showToast(`Set registrado para ${itemEx.name}`, 'success');
+        await renderTrainUI();
+      };
+    }
+
     const btnRest = div.querySelector("[data-rest]");
-
-    btnAdd.onclick = async () => {
-      const wTxt = (inpW.value||"").trim().replace(",",".");
-      const rTxt = (inpR.value||"").trim();
-      if (!wTxt) {
-        showToast('Informe o peso', 'error');
-        return;
-      }
-      const reps = rTxt ? parseInt(rTxt,10) : null;
-      if (rTxt && isNaN(reps)) {
-        showToast('Reps inválidas', 'error');
-        return;
-      }
-
-      const weightUI = parseFloat(wTxt);
-      if (isNaN(weightUI) || weightUI <= 0) {
-        showToast('Peso inválido', 'error');
-        return;
-      }
-
-      const weightKg = (CURRENT.unit === "kg") ? weightUI : toKg(weightUI);
-
-      const nextIndex = (sets.length ? Math.max(...sets.map(s=>s.set_index)) : 0) + 1;
-
-      await DB.put("session_sets", {
-        id: uid(),
-        session_id: live.id,
-        exercise_id: ex.id,
-        set_index: nextIndex,
-        reps: reps,
-        weight_kg: weightKg,
-        rir: null,
-        rpe: null,
-        notes: "",
-        created_at: nowIso()
-      });
-
-      inpW.value = "";
-      inpR.value = "";
-
-      // auto start rest with template rest
-      const restSec = it.rest_seconds || 90;
-      await startRest(restSec);
-
-      await renderTrainUI();
-    };
-
     btnRest.onclick = async () => {
-      const restSec = it.rest_seconds || 90;
+      const restSec = firstItem.rest_seconds || 90;
       await startRest(restSec);
       openRestModal();
     };
