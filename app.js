@@ -1,5 +1,10 @@
 import { DB } from "./db.js";
 
+// Inicializar Supabase
+const SUPABASE_URL = "https://urnfqiwgtloldzaovive.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVybmZxaXdndGxvbGR6YW92aXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY2MjY4MDAsImV4cCI6MjA1MjIwMjgwMH0.sb_publishable_C-JUI7jQWTd5ocVYfCCbcg_w73rcUKz";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const $ = (id) => document.getElementById(id);
 const uid = () => crypto.randomUUID();
 const nowIso = () => new Date().toISOString();
