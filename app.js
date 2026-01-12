@@ -140,34 +140,83 @@ async function demoLogin(email, password, rememberMe = true) {
 async function demoRegister(userData) {
   const { email, password, name, age, weight, height, gender, role } = userData;
   
-  const existing = await DB.get("users", email);
-  
-  if (existing) {
-    return { error: "Usuário já existe. Use 'Entrar' para fazer login." };
-  }
-  
   if (password.length < 6) {
     return { error: "A senha deve ter pelo menos 6 caracteres." };
   }
   
-  // Criar novo usuário
-  await DB.put("users", { 
-    email, 
-    password, 
-    name,
-    age: parseInt(age) || null,
-    weight: parseFloat(weight) || null,
-    height: parseInt(height) || null,
-    gender,
-    role, 
-    created_at: nowIso() 
-  });
-  
-  // Auto login após registro
-  await DB.put("runtime", { key: "current_user", value: { email, role } });
-  await DB.put("runtime", { key: "remember_me", value: true });
-  
-  return { email, role };
+  // Criar usuário no Supabase Auth
+  try {
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+          age: parseInt(age) || null,
+          weight: parseFloat(weight) || null,
+          height: parseInt(height) || null,
+          gender,
+          role
+        }
+      }
+    });
+    
+    if (authError) {
+      console.error('Erro no Supabase Auth:', authError);
+      if (authError.message.includes('already registered')) {
+        return { error: "Este e-mail já está cadastrado. Use 'Entrar' para fazer login." };
+      }
+      return { error: authError.message || "Erro ao criar conta. Tente novamente." };
+    }
+    
+    // Salvar dados do usuário na tabela users
+    if (authData.user) {
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email,
+          name,
+          age: parseInt(age) || null,
+          weight: parseFloat(weight) || null,
+          height: parseInt(height) || null,
+          gender,
+          role,
+          created_at: nowIso()
+        });
+      
+      if (insertError) {
+        console.error('Erro ao salvar usuário na tabela:', insertError);
+        showToast('Conta criada, mas alguns dados não foram salvos', 'warning');
+      } else {
+        console.log('✅ Usuário salvo no Supabase com sucesso!');
+      }
+    }
+    
+    // Salvar localmente também
+    await DB.put("users", { 
+      email, 
+      password, 
+      name,
+      age: parseInt(age) || null,
+      weight: parseFloat(weight) || null,
+      height: parseInt(height) || null,
+      gender,
+      role, 
+      created_at: nowIso() 
+    });
+    
+    // Auto login após registro
+    await DB.put("runtime", { key: "current_user", value: { email, role } });
+    await DB.put("runtime", { key: "remember_me", value: true });
+    
+    showToast('✅ Conta criada com sucesso!', 'success');
+    return { email, role };
+    
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error);
+    return { error: "Erro ao criar conta. Verifique sua conexão e tente novamente." };
+  }
 }
 
 async function demoLogout() {
