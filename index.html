@@ -672,6 +672,83 @@
   </div>
 </div>
 
+<!-- MODAL EDITAR EXERCÍCIO -->
+<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='editModal') closeEditModal()">
+  <div style="max-width:700px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
+    <div class="row" style="justify-content:space-between;margin-bottom:16px">
+      <strong id="editModalTitle" style="font-size:18px">✏️ Editar Exercício</strong>
+      <button class="secondary small" id="btnCloseEditModal">✕ Fechar</button>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <!-- Exercícios atuais no combo/grupo -->
+    <div style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:16px">
+      <strong style="display:block;margin-bottom:8px">Exercícios neste grupo:</strong>
+      <div id="editExercisesList" class="muted"></div>
+    </div>
+    
+    <!-- Formulário de edição -->
+    <div class="card" style="background:var(--bg)">
+      <h3>⚙️ Configurações</h3>
+      
+      <div class="row">
+        <div style="flex:1">
+          <label>Sets alvo</label>
+          <input id="editTargetSets" type="number" placeholder="Ex: 3" value="3" min="1" max="10">
+        </div>
+        <div style="flex:1">
+          <label>Reps alvo (simples)</label>
+          <input id="editTargetReps" placeholder="Ex: 8-12" value="8-12">
+        </div>
+      </div>
+      
+      <label>Repetições personalizadas (opcional)</label>
+      <div class="row" style="gap:8px;margin-bottom:8px">
+        <button type="button" class="secondary small" id="btnEditCustomRepsHelper">📝 Assistente de séries</button>
+      </div>
+      <textarea id="editCustomReps" placeholder="Ex: 10, 10, 8, 6" style="min-height:70px"></textarea>
+      
+      <label>Tempo de descanso (segundos)</label>
+      <select id="editRestSec">
+        <option value="30">30 segundos</option>
+        <option value="45">45 segundos</option>
+        <option value="60">60 segundos (1 min)</option>
+        <option value="90" selected>90 segundos (1:30)</option>
+        <option value="120">120 segundos (2 min)</option>
+        <option value="180">180 segundos (3 min)</option>
+        <option value="240">240 segundos (4 min)</option>
+        <option value="300">300 segundos (5 min)</option>
+      </select>
+      
+      <label>Tipo de combo</label>
+      <select id="editComboType">
+        <option value="">Sem combo</option>
+        <option value="superset">Superset (A1/A2)</option>
+        <option value="biset">Biset (2 exercícios mesmo músculo)</option>
+        <option value="triset">Triset (3 exercícios)</option>
+        <option value="giantset">Giant set (4+ exercícios)</option>
+      </select>
+    </div>
+    
+    <!-- Adicionar mais exercícios ao combo -->
+    <div class="card" style="background:var(--bg);margin-top:16px" id="editAddExerciseSection">
+      <h3>➕ Adicionar mais exercícios ao combo</h3>
+      <label>Buscar exercício</label>
+      <input id="editExSearch" placeholder="Digite para filtrar..." autocomplete="off">
+      <div id="editExResults" style="max-height:200px;overflow-y:auto;margin:10px 0;border:1px solid var(--line);border-radius:10px;padding:8px"></div>
+      <button class="secondary small" id="btnAddExerciseToCombo" disabled>+ Adicionar ao combo</button>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="row" style="gap:8px">
+      <button class="good" id="btnSaveEdit">💾 Salvar alterações</button>
+      <button class="secondary" id="btnCancelEdit">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="./app.js"></script>
 </body>
 </html>

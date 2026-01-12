@@ -647,37 +647,173 @@ async function addTemplateItem() {
   }
 }
 
+// ---------- EDIÇÃO DE EXERCÍCIOS ----------
+let EDIT_GROUP = [];
+let EDIT_SELECTED_EXERCISE = null;
+
 async function editTemplateItem(group) {
   try {
+    EDIT_GROUP = group;
     const firstItem = group[0];
-    const isCombo = group.length > 1;
     
     // Preencher os campos com os valores atuais
-    $("tmplTargetSets").value = firstItem.target_sets || 3;
-    $("tmplTargetReps").value = firstItem.target_reps || "8-12";
-    $("tmplCustomReps").value = firstItem.custom_reps || "";
-    $("tmplRestSec").value = firstItem.rest_seconds || 90;
-    $("tmplComboType").value = firstItem.combo_type || "";
+    $("editTargetSets").value = firstItem.target_sets || 3;
+    $("editTargetReps").value = firstItem.target_reps || "8-12";
+    $("editCustomReps").value = firstItem.custom_reps || "";
+    $("editRestSec").value = firstItem.rest_seconds || 90;
+    $("editComboType").value = firstItem.combo_type || "";
     
-    // Criar modal de edição
+    // Mostrar exercícios atuais
     const exMap = new Map((await DB.all("exercises")).map(e => [e.id, e]));
     const exerciseNames = group.map(it => {
       const ex = exMap.get(it.exercise_id);
       return ex ? ex.name : "?";
-    }).join(" + ");
+    }).join(" • ");
     
-    const confirmed = confirm(`Editar: ${exerciseNames}\n\nOs valores atuais foram carregados nos campos acima. Ajuste-os e clique em OK para salvar.`);
+    $("editModalTitle").textContent = `✏️ Editar: ${exerciseNames}`;
+    $("editExercisesList").innerHTML = group.map(it => {
+      const ex = exMap.get(it.exercise_id);
+      return `<div>• ${escapeHtml(ex?.name || "?")}</div>`;
+    }).join("");
     
-    if (!confirmed) return;
+    // Limpar busca de exercícios
+    $("editExSearch").value = "";
+    $("editExResults").innerHTML = "";
+    $("btnAddExerciseToCombo").disabled = true;
+    EDIT_SELECTED_EXERCISE = null;
+    
+    // Abrir modal
+    $("editModal").style.display = "block";
+    
+  } catch (err) {
+    console.error("Erro ao abrir edição:", err);
+    showToast("Erro ao abrir edição", "error");
+  }
+}
+
+function closeEditModal() {
+  $("editModal").style.display = "none";
+  EDIT_GROUP = [];
+  EDIT_SELECTED_EXERCISE = null;
+}
+
+async function searchExercisesForEdit() {
+  const query = $("editExSearch").value.trim().toLowerCase();
+  const results = $("editExResults");
+  
+  if (!query) {
+    results.innerHTML = "<div class='muted'>Digite para buscar exercícios...</div>";
+    return;
+  }
+  
+  const allExercises = await DB.all("exercises");
+  const filtered = allExercises.filter(e => 
+    e.is_active && 
+    (e.name.toLowerCase().includes(query) || 
+     e.primary_muscle.toLowerCase().includes(query))
+  );
+  
+  if (!filtered.length) {
+    results.innerHTML = "<div class='muted'>Nenhum exercício encontrado</div>";
+    return;
+  }
+  
+  results.innerHTML = "";
+  for (const ex of filtered) {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.style.cursor = "pointer";
+    div.innerHTML = `
+      <div style="flex:1">
+        <strong>${escapeHtml(ex.name)}</strong>
+        <div class="meta">${escapeHtml(ex.primary_muscle)} • ${escapeHtml(ex.equipment)}</div>
+      </div>
+    `;
+    
+    div.onclick = () => {
+      // Remover seleção anterior
+      results.querySelectorAll(".item").forEach(i => i.style.background = "");
+      div.style.background = "var(--primary)";
+      div.style.color = "white";
+      
+      EDIT_SELECTED_EXERCISE = ex;
+      $("btnAddExerciseToCombo").disabled = false;
+    };
+    
+    results.appendChild(div);
+  }
+}
+
+async function addExerciseToCombo() {
+  if (!EDIT_SELECTED_EXERCISE || !EDIT_GROUP.length) return;
+  
+  try {
+    const firstItem = EDIT_GROUP[0];
+    
+    // Verificar se já existe no grupo
+    if (EDIT_GROUP.some(it => it.exercise_id === EDIT_SELECTED_EXERCISE.id)) {
+      showToast("Este exercício já está no combo", "error");
+      return;
+    }
+    
+    // Buscar todos os itens do dia para pegar o máximo order
+    const items = await DB.byIndex("template_items", "template_day_id", CURRENT_DAY_ID);
+    let maxOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) : 0;
+    
+    // Criar novo item com mesmo combo_group
+    const newItem = {
+      id: Date.now() + Math.random(),
+      template_id: firstItem.template_id,
+      template_day_id: firstItem.template_day_id,
+      exercise_id: EDIT_SELECTED_EXERCISE.id,
+      order: maxOrder + 1,
+      target_sets: firstItem.target_sets,
+      target_reps: firstItem.target_reps,
+      custom_reps: firstItem.custom_reps,
+      rest_seconds: firstItem.rest_seconds,
+      combo_type: firstItem.combo_type || "superset",
+      combo_group: firstItem.combo_group || Date.now(),
+      combo_order: EDIT_GROUP.length + 1
+    };
+    
+    await DB.put("template_items", newItem);
+    
+    // Atualizar combo_group e combo_type em todos os itens do grupo se não tinha
+    if (!firstItem.combo_group) {
+      for (const it of EDIT_GROUP) {
+        it.combo_group = newItem.combo_group;
+        it.combo_type = newItem.combo_type;
+        await DB.put("template_items", it);
+      }
+    }
+    
+    showToast(`${EDIT_SELECTED_EXERCISE.name} adicionado ao combo!`, "success");
+    
+    // Recarregar o grupo atualizado
+    const updatedItems = await DB.byIndex("template_items", "template_day_id", CURRENT_DAY_ID);
+    const updatedGroup = updatedItems.filter(i => i.combo_group === (firstItem.combo_group || newItem.combo_group));
+    updatedGroup.sort((a,b) => (a.combo_order||0) - (b.combo_order||0));
+    
+    await editTemplateItem(updatedGroup);
+    
+  } catch (err) {
+    console.error("Erro ao adicionar ao combo:", err);
+    showToast("Erro ao adicionar ao combo", "error");
+  }
+}
+
+async function saveEditChanges() {
+  if (!EDIT_GROUP.length) return;
+  
+  try {
+    const targetSets = parseInt($("editTargetSets").value) || 3;
+    const targetReps = $("editTargetReps").value.trim() || "8-12";
+    const customReps = $("editCustomReps").value.trim() || null;
+    const restSeconds = parseInt($("editRestSec").value) || 90;
+    const comboType = $("editComboType").value.trim() || null;
     
     // Atualizar todos os itens do grupo
-    const targetSets = parseInt($("tmplTargetSets").value) || 3;
-    const targetReps = $("tmplTargetReps").value.trim() || "8-12";
-    const customReps = $("tmplCustomReps").value.trim() || null;
-    const restSeconds = parseInt($("tmplRestSec").value) || 90;
-    const comboType = $("tmplComboType").value.trim() || null;
-    
-    for (const it of group) {
+    for (const it of EDIT_GROUP) {
       it.target_sets = targetSets;
       it.target_reps = targetReps;
       it.custom_reps = customReps;
@@ -687,13 +823,18 @@ async function editTemplateItem(group) {
       await DB.put("template_items", it);
     }
     
-    showToast("Exercício atualizado!", "success");
+    showToast("Alterações salvas!", "success");
+    closeEditModal();
     await loadTemplateItems();
     
   } catch (err) {
-    console.error("Erro ao editar exercício:", err);
-    showToast("Erro ao editar exercício", "error");
+    console.error("Erro ao salvar alterações:", err);
+    showToast("Erro ao salvar alterações", "error");
   }
+}
+
+function openEditCustomRepsHelper() {
+  openCustomRepsHelper("editCustomReps");
 }
 
 async function loadTemplateItems() {
@@ -1403,8 +1544,10 @@ function wireTabs() {
 
 // ---------- ASSISTENTE DE SÉRIES PERSONALIZADAS ----------
 let customRepsBlocks = [];
+let customRepsTargetField = null; // Para saber qual campo preencher
 
-function openCustomRepsHelper() {
+function openCustomRepsHelper(targetFieldId = "tmplCustomReps") {
+  customRepsTargetField = targetFieldId;
   // Inicializar com um bloco padrão
   customRepsBlocks = [{ sets: 3, reps: 12 }];
   renderCustomRepsBlocks();
@@ -1488,7 +1631,8 @@ function applyCustomReps() {
     }
   });
   
-  $("tmplCustomReps").value = reps.join(", ");
+  // Aplicar no campo correto (modal de adição ou edição)
+  $(customRepsTargetField || "tmplCustomReps").value = reps.join(", ");
   closeCustomRepsHelper();
   showToast('Séries personalizadas aplicadas!', 'success');
 }
@@ -1623,11 +1767,19 @@ async function init() {
   $("tmplComboType").onchange = toggleComboMode;
 
   // custom reps helper
-  $("btnCustomRepsHelper").onclick = openCustomRepsHelper;
+  $("btnCustomRepsHelper").onclick = () => openCustomRepsHelper("tmplCustomReps");
   $("btnCloseCustomReps").onclick = closeCustomRepsHelper;
   $("btnCancelCustomReps").onclick = closeCustomRepsHelper;
   $("btnAddRepsBlock").onclick = addRepsBlock;
   $("btnApplyCustomReps").onclick = applyCustomReps;
+
+  // edit modal
+  $("btnCloseEditModal").onclick = closeEditModal;
+  $("btnCancelEdit").onclick = closeEditModal;
+  $("btnSaveEdit").onclick = saveEditChanges;
+  $("editExSearch").oninput = searchExercisesForEdit;
+  $("btnAddExerciseToCombo").onclick = addExerciseToCombo;
+  $("btnEditCustomRepsHelper").onclick = openEditCustomRepsHelper;
 
   $("catalogSearch").oninput = () => renderCatalog(false);
   $("adminSearch").oninput = () => renderCatalog(true);
