@@ -417,9 +417,9 @@
 <!-- MODAL: REGISTER -->
 <div id="registerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='registerModal') $('registerModal').style.display='none'">
   <div style="max-width:500px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
-      <strong style="font-size:17px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 Criar Nova Conta</strong>
-      <button class="secondary" id="btnCloseRegisterModal" style="min-width:80px;padding:10px 16px;font-size:16px">✕</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <strong style="font-size:16px">Criar Conta</strong>
+      <button id="btnCloseRegisterModal" style="background:#ef4444;color:white;border:none;padding:12px 20px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;min-width:50px">✕</button>
     </div>
     <div class="divider"></div>
     
@@ -496,9 +496,9 @@
 <!-- MODAL: MANAGE TEMPLATE DAYS -->
 <div id="templateDaysModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateDaysModal') closeTemplateDaysModal()">
   <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
-    <div style="padding:15px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px">
-      <strong id="templateDaysModalTitle" style="font-size:17px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Dias do Treino</strong>
-      <button class="secondary" id="btnCloseTemplateDaysModal" style="min-width:80px;padding:10px 16px;font-size:16px">✕</button>
+    <div style="padding:12px 16px;border-bottom:2px solid #374151;background:#1e293b;display:flex;align-items:center;justify-content:space-between">
+      <strong id="templateDaysModalTitle" style="font-size:16px;color:white">Dias do Treino</strong>
+      <button id="btnCloseTemplateDaysModal" style="background:#ef4444;color:white;border:none;padding:12px 20px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;min-width:50px">✕</button>
     </div>
     <div style="padding:20px;overflow-y:auto;flex:1">
     
@@ -574,9 +574,9 @@
 <!-- MODAL TEMPLATE ITEMS -->
 <div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateModal') closeTemplateModal()">
   <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
-    <div style="padding:15px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px">
-      <strong id="templateModalTitle" style="font-size:17px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Exercícios do Treino</strong>
-      <button class="secondary" id="btnCloseTemplateModal" style="min-width:80px;padding:10px 16px;font-size:16px">✕</button>
+    <div style="padding:12px 16px;border-bottom:2px solid #374151;background:#1e293b;display:flex;align-items:center;justify-content:space-between">
+      <strong id="templateModalTitle" style="font-size:16px;color:white">Exercícios</strong>
+      <button id="btnCloseTemplateModal" style="background:#ef4444;color:white;border:none;padding:12px 20px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;min-width:50px">✕</button>
     </div>
     <div style="padding:20px;overflow-y:auto;flex:1">
     
@@ -648,9 +648,9 @@
 <!-- MODAL ASSISTENTE DE SÉRIES -->
 <div id="customRepsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='customRepsModal') closeCustomRepsHelper()">
   <div style="max-width:500px;margin:10vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow-lg)">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
-      <strong style="font-size:17px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 Assistente de Séries</strong>
-      <button class="secondary" id="btnCloseCustomReps" style="min-width:80px;padding:10px 16px;font-size:16px">✕</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <strong style="font-size:16px">Séries</strong>
+      <button id="btnCloseCustomReps" style="background:#ef4444;color:white;border:none;padding:12px 20px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;min-width:50px">✕</button>
     </div>
     
     <div class="muted" style="margin-bottom:16px">
@@ -678,9 +678,9 @@
 <!-- MODAL EDITAR EXERCÍCIO -->
 <div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='editModal') closeEditModal()">
   <div style="max-width:700px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
-    <div style="padding:15px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px">
-      <strong id="editModalTitle" style="font-size:17px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✏️ Editar Exercício</strong>
-      <button class="secondary" id="btnCloseEditModal" style="min-width:80px;padding:10px 16px;font-size:16px">✕</button>
+    <div style="padding:12px 16px;border-bottom:2px solid #374151;background:#1e293b;display:flex;align-items:center;justify-content:space-between">
+      <strong id="editModalTitle" style="font-size:16px;color:white">Editar</strong>
+      <button id="btnCloseEditModal" style="background:#ef4444;color:white;border:none;padding:12px 20px;font-size:18px;font-weight:bold;border-radius:8px;cursor:pointer;min-width:50px">✕</button>
     </div>
     
     <div style="padding:20px;overflow-y:auto;flex:1">
