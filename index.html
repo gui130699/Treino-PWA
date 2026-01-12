@@ -416,9 +416,9 @@
 <!-- MODAL: REGISTER -->
 <div id="registerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='registerModal') $('registerModal').style.display='none'">
   <div style="max-width:500px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
-    <div class="row" style="justify-content:space-between">
-      <strong style="font-size:18px">📝 Criar Nova Conta</strong>
-      <button class="secondary small" id="btnCloseRegisterModal">✕ Fechar</button>
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:16px">
+      <strong style="font-size:18px;flex:1;min-width:0">📝 Criar Nova Conta</strong>
+      <button class="secondary small" id="btnCloseRegisterModal" style="flex-shrink:0">✕ Fechar</button>
     </div>
     <div class="divider"></div>
     
@@ -496,9 +496,9 @@
 <div id="templateDaysModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateDaysModal') closeTemplateDaysModal()">
   <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
     <div style="padding:20px;border-bottom:1px solid var(--line)">
-      <div class="row" style="justify-content:space-between">
-        <strong id="templateDaysModalTitle" style="font-size:18px">Dias do Treino</strong>
-        <button class="secondary small" id="btnCloseTemplateDaysModal">✕ Fechar</button>
+      <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:16px">
+        <strong id="templateDaysModalTitle" style="font-size:18px;flex:1;min-width:0">Dias do Treino</strong>
+        <button class="secondary small" id="btnCloseTemplateDaysModal" style="flex-shrink:0">✕ Fechar</button>
       </div>
     </div>
     <div style="padding:20px;overflow-y:auto;flex:1">
@@ -576,9 +576,9 @@
 <div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateModal') closeTemplateModal()">
   <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
     <div style="padding:20px;border-bottom:1px solid var(--line)">
-      <div class="row" style="justify-content:space-between">
-        <strong id="templateModalTitle" style="font-size:18px">Exercícios do Treino</strong>
-        <button class="secondary small" id="btnCloseTemplateModal">✕ Fechar</button>
+      <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:16px">
+        <strong id="templateModalTitle" style="font-size:18px;flex:1;min-width:0">Exercícios do Treino</strong>
+        <button class="secondary small" id="btnCloseTemplateModal" style="flex-shrink:0">✕ Fechar</button>
       </div>
     </div>
     <div style="padding:20px;overflow-y:auto;flex:1">
@@ -651,9 +651,9 @@
 <!-- MODAL ASSISTENTE DE SÉRIES -->
 <div id="customRepsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='customRepsModal') closeCustomRepsHelper()">
   <div style="max-width:500px;margin:10vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow-lg)">
-    <div class="row" style="justify-content:space-between;margin-bottom:16px">
-      <strong style="font-size:18px">📝 Assistente de Séries Personalizadas</strong>
-      <button class="secondary small" id="btnCloseCustomReps">✕ Fechar</button>
+    <div class="row" style="justify-content:space-between;margin-bottom:16px;flex-wrap:nowrap;gap:16px">
+      <strong style="font-size:18px;flex:1;min-width:0">📝 Assistente de Séries Personalizadas</strong>
+      <button class="secondary small" id="btnCloseCustomReps" style="flex-shrink:0">✕ Fechar</button>
     </div>
     
     <div class="muted" style="margin-bottom:16px">
@@ -682,9 +682,9 @@
 <div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='editModal') closeEditModal()">
   <div style="max-width:700px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
     <div style="padding:20px;border-bottom:1px solid var(--line)">
-      <div class="row" style="justify-content:space-between">
-        <strong id="editModalTitle" style="font-size:18px">✏️ Editar Exercício</strong>
-        <button class="secondary small" id="btnCloseEditModal">✕ Fechar</button>
+      <div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:16px">
+        <strong id="editModalTitle" style="font-size:18px;flex:1;min-width:0">✏️ Editar Exercício</strong>
+        <button class="secondary small" id="btnCloseEditModal" style="flex-shrink:0">✕ Fechar</button>
       </div>
     </div>
     
