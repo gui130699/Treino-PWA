@@ -599,8 +599,11 @@
       </div>
       
       <label>Repetições personalizadas (opcional)</label>
+      <div class="row" style="gap:8px;margin-bottom:8px">
+        <button type="button" class="secondary small" id="btnCustomRepsHelper">📝 Assistente de séries</button>
+      </div>
       <textarea id="tmplCustomReps" placeholder="Ex: 10, 10, 8, 6 (uma por linha ou separado por vírgula)&#10;Ou: 3x10 + 1x6" style="min-height:70px"></textarea>
-      <div class="muted">Se preenchido, sobrescreve "Reps alvo". Ex: para fazer 3 séries de 10 e 1 de 6, digite: 10, 10, 10, 6</div>
+      <div class="muted">Se preenchido, sobrescreve "Reps alvo". Ex: para fazer 3 séries de 10 e 1 de 6, digite: 10, 10, 10, 6 ou 3x10+1x6</div>
       
       <label>Tempo de descanso deste exercício (segundos)</label>
       <select id="tmplRestSec">
@@ -635,6 +638,36 @@
     <!-- Items List -->
     <h3>📝 Exercícios do treino</h3>
     <div id="templateItemsList" class="list"></div>
+  </div>
+</div>
+
+<!-- MODAL ASSISTENTE DE SÉRIES -->
+<div id="customRepsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);">
+  <div style="max-width:500px;margin:10vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow-lg)">
+    <div class="row" style="justify-content:space-between;margin-bottom:16px">
+      <strong style="font-size:18px">📝 Assistente de Séries Personalizadas</strong>
+      <button class="secondary small" id="btnCloseCustomReps">✕</button>
+    </div>
+    
+    <div class="muted" style="margin-bottom:16px">
+      Configure séries com repetições diferentes. Ex: 3 séries de 12 reps + 1 série de 6 reps (dropset)
+    </div>
+    
+    <div id="customRepsBlocks"></div>
+    
+    <button class="secondary small" id="btnAddRepsBlock" style="margin-bottom:16px">+ Adicionar bloco de séries</button>
+    
+    <div class="divider"></div>
+    
+    <div style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:16px">
+      <div class="muted" style="margin-bottom:4px">Preview:</div>
+      <strong id="customRepsPreview">-</strong>
+    </div>
+    
+    <div class="row" style="gap:8px">
+      <button class="good" id="btnApplyCustomReps">Aplicar</button>
+      <button class="secondary" id="btnCancelCustomReps">Cancelar</button>
+    </div>
   </div>
 </div>
 

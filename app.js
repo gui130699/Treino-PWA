@@ -1345,6 +1345,98 @@ function wireTabs() {
   });
 }
 
+// ---------- ASSISTENTE DE SÉRIES PERSONALIZADAS ----------
+let customRepsBlocks = [];
+
+function openCustomRepsHelper() {
+  // Inicializar com um bloco padrão
+  customRepsBlocks = [{ sets: 3, reps: 12 }];
+  renderCustomRepsBlocks();
+  $("customRepsModal").style.display = "block";
+}
+
+function closeCustomRepsHelper() {
+  $("customRepsModal").style.display = "none";
+}
+
+function addRepsBlock() {
+  customRepsBlocks.push({ sets: 1, reps: 10 });
+  renderCustomRepsBlocks();
+}
+
+function removeRepsBlock(index) {
+  customRepsBlocks.splice(index, 1);
+  if (customRepsBlocks.length === 0) {
+    customRepsBlocks.push({ sets: 3, reps: 12 });
+  }
+  renderCustomRepsBlocks();
+}
+
+function updateRepsBlock(index, field, value) {
+  customRepsBlocks[index][field] = parseInt(value) || 1;
+  renderCustomRepsBlocks();
+}
+
+function renderCustomRepsBlocks() {
+  const container = $("customRepsBlocks");
+  container.innerHTML = "";
+  
+  customRepsBlocks.forEach((block, index) => {
+    const div = document.createElement("div");
+    div.className = "row";
+    div.style.gap = "8px";
+    div.style.marginBottom = "12px";
+    div.innerHTML = `
+      <input type="number" min="1" max="20" value="${block.sets}" 
+             data-block-sets="${index}" placeholder="Séries" 
+             style="width:80px;text-align:center">
+      <span style="line-height:40px">×</span>
+      <input type="number" min="1" max="100" value="${block.reps}" 
+             data-block-reps="${index}" placeholder="Reps" 
+             style="width:80px;text-align:center">
+      <span style="line-height:40px">reps</span>
+      ${customRepsBlocks.length > 1 ? `<button class="danger small" data-remove="${index}">✕</button>` : ''}
+    `;
+    
+    const setsInput = div.querySelector(`[data-block-sets="${index}"]`);
+    const repsInput = div.querySelector(`[data-block-reps="${index}"]`);
+    
+    setsInput.oninput = (e) => updateRepsBlock(index, 'sets', e.target.value);
+    repsInput.oninput = (e) => updateRepsBlock(index, 'reps', e.target.value);
+    
+    const removeBtn = div.querySelector(`[data-remove="${index}"]`);
+    if (removeBtn) {
+      removeBtn.onclick = () => removeRepsBlock(index);
+    }
+    
+    container.appendChild(div);
+  });
+  
+  updateCustomRepsPreview();
+}
+
+function updateCustomRepsPreview() {
+  const preview = customRepsBlocks
+    .map(block => `${block.sets}x${block.reps}`)
+    .join(" + ");
+  
+  $("customRepsPreview").textContent = preview;
+}
+
+function applyCustomReps() {
+  // Converter blocos em lista de reps individuais
+  const reps = [];
+  customRepsBlocks.forEach(block => {
+    for (let i = 0; i < block.sets; i++) {
+      reps.push(block.reps);
+    }
+  });
+  
+  $("tmplCustomReps").value = reps.join(", ");
+  closeCustomRepsHelper();
+  showToast('Séries personalizadas aplicadas!', 'success');
+}
+
 // ---------- INIT ----------
 async function init() {
   netUpdate();
@@ -1473,6 +1565,13 @@ async function init() {
   $("btnAddTemplateItem").onclick = addTemplateItem;
   $("btnAddMultipleItems").onclick = addMultipleItems;
   $("tmplComboType").onchange = toggleComboMode;
+
+  // custom reps helper
+  $("btnCustomRepsHelper").onclick = openCustomRepsHelper;
+  $("btnCloseCustomReps").onclick = closeCustomRepsHelper;
+  $("btnCancelCustomReps").onclick = closeCustomRepsHelper;
+  $("btnAddRepsBlock").onclick = addRepsBlock;
+  $("btnApplyCustomReps").onclick = applyCustomReps;
 
   $("catalogSearch").oninput = () => renderCatalog(false);
   $("adminSearch").oninput = () => renderCatalog(true);
