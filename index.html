@@ -494,12 +494,14 @@
 
 <!-- MODAL: MANAGE TEMPLATE DAYS -->
 <div id="templateDaysModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateDaysModal') closeTemplateDaysModal()">
-  <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
-    <div class="row" style="justify-content:space-between">
-      <strong id="templateDaysModalTitle" style="font-size:18px">Dias do Treino</strong>
-      <button class="secondary small" id="btnCloseTemplateDaysModal">✕ Fechar</button>
+  <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
+    <div style="padding:20px;border-bottom:1px solid var(--line)">
+      <div class="row" style="justify-content:space-between">
+        <strong id="templateDaysModalTitle" style="font-size:18px">Dias do Treino</strong>
+        <button class="secondary small" id="btnCloseTemplateDaysModal">✕ Fechar</button>
+      </div>
     </div>
-    <div class="divider"></div>
+    <div style="padding:20px;overflow-y:auto;flex:1">
     
     <!-- Add Day Form -->
     <div class="card" style="background:var(--bg);margin-bottom:16px">
@@ -566,17 +568,20 @@
     <!-- Days List -->
     <h3>📅 Dias adicionados</h3>
     <div id="templateDaysList" class="list"></div>
+    </div>
   </div>
 </div>
 
 <!-- MODAL TEMPLATE ITEMS -->
 <div id="templateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:50; backdrop-filter:blur(4px);" onclick="if(event.target.id==='templateModal') closeTemplateModal()">
-  <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
-    <div class="row" style="justify-content:space-between">
-      <strong id="templateModalTitle" style="font-size:18px">Exercícios do Treino</strong>
-      <button class="secondary small" id="btnCloseTemplateModal">✕ Fechar</button>
+  <div style="max-width:800px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
+    <div style="padding:20px;border-bottom:1px solid var(--line)">
+      <div class="row" style="justify-content:space-between">
+        <strong id="templateModalTitle" style="font-size:18px">Exercícios do Treino</strong>
+        <button class="secondary small" id="btnCloseTemplateModal">✕ Fechar</button>
+      </div>
     </div>
-    <div class="divider"></div>
+    <div style="padding:20px;overflow-y:auto;flex:1">
     
     <!-- Add Exercise Form -->
     <div class="card" style="background:var(--bg);margin-bottom:16px">
@@ -638,6 +643,7 @@
     <!-- Items List -->
     <h3>📝 Exercícios do treino</h3>
     <div id="templateItemsList" class="list"></div>
+    </div>
   </div>
 </div>
 
@@ -674,13 +680,15 @@
 
 <!-- MODAL EDITAR EXERCÍCIO -->
 <div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:60; backdrop-filter:blur(4px);" onclick="if(event.target.id==='editModal') closeEditModal()">
-  <div style="max-width:700px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
-    <div class="row" style="justify-content:space-between;margin-bottom:16px">
-      <strong id="editModalTitle" style="font-size:18px">✏️ Editar Exercício</strong>
-      <button class="secondary small" id="btnCloseEditModal">✕ Fechar</button>
+  <div style="max-width:700px;margin:4vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
+    <div style="padding:20px;border-bottom:1px solid var(--line)">
+      <div class="row" style="justify-content:space-between">
+        <strong id="editModalTitle" style="font-size:18px">✏️ Editar Exercício</strong>
+        <button class="secondary small" id="btnCloseEditModal">✕ Fechar</button>
+      </div>
     </div>
     
-    <div class="divider"></div>
+    <div style="padding:20px;overflow-y:auto;flex:1">
     
     <!-- Exercícios atuais no combo/grupo -->
     <div style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:16px">
@@ -745,6 +753,7 @@
     <div class="row" style="gap:8px">
       <button class="good" id="btnSaveEdit">💾 Salvar alterações</button>
       <button class="secondary" id="btnCancelEdit">Cancelar</button>
+    </div>
     </div>
   </div>
 </div>
